@@ -6,18 +6,20 @@
 # """
 
 import numpy as np
+from src.common.types import LaneLineState
 
 class LaneDetector:
     def __init__(self, camera_matrix: np.ndarray = None) -> None:
         self.camera_matrix: np.ndarray = camera_matrix
 
-    def process_frame(self, frame: np.ndarray) -> float:
+    def process_frame(self, frame: np.ndarray) -> LaneLineState:
         """
         Analyze a video frame and compute the lateral offset from the lane center.
-        Returns a float offset in meters (negative = left, positive = right).
+        Returns a LaneLineState object.
         """
-        pass
+        # TODO: OpenCV calculations. Returning default mock state.
+        return LaneLineState(detected=False, center_offset_m=0.0, lane_heading_deg=0.0)
 
-    def get_steering_error(self, offset_m: float) -> float:
+    def get_steering_error(self, lane_state: LaneLineState) -> float:
         """Map lateral lane center offset to target steering angle adjustment."""
         pass

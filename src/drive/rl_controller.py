@@ -9,7 +9,7 @@
 import time
 from typing import List, Callable
 from src.common.backend import CarBackend
-from src.common.types import CarTelemetry
+from src.common.types import CarTelemetry, CarCommand, LidarScan
 from src.perception.lidar_sim import LidarSimulator
 from src.rl.agent import PolicyNetwork
 
@@ -30,19 +30,18 @@ class RLCarController:
         """
         telemetry: CarTelemetry = self.backend.telemetry()
         
-        # 1. Generate Lidar ranges
-        ranges: List[float] = self.lidar_sim.generate_scan(telemetry.x, telemetry.y, telemetry.heading_deg)
+        # 1. Generate Lidar scan
+        scan: LidarScan = self.lidar_sim.generate_scan(telemetry.x, telemetry.y, telemetry.heading_deg)
         
         # 2. Assemble observation state [speed, lidar_left, lidar_center, lidar_right]
-        observation: List[float] = [telemetry.speed_mps] + ranges
+        observation: List[float] = [telemetry.speed_mps] + scan.ranges_m
         
         # 3. Query policy network
         action: List[float] = self.policy.forward(observation)
-        throttle: float = action[0]
-        steering: float = action[1]
+        cmd = CarCommand(throttle=action[0], steering=action[1])
         
         # 4. Dispatch control signals
-        self.backend.set_controls(throttle, steering)
+        self.backend.send_command(cmd)
         
         # 5. Step physics or pump telemetry comms
         self.backend.update(dt)

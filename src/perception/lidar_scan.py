@@ -6,16 +6,18 @@
 # """
 
 from typing import List, Tuple
+from src.common.types import LidarScan
 
 class LidarProcessor:
     def __init__(self, angle_min_deg: float = -90.0, angle_max_deg: float = 90.0) -> None:
         self.angle_min_deg: float = angle_min_deg
         self.angle_max_deg: float = angle_max_deg
 
-    def filter_raw_scan(self, raw_ranges_m: List[float]) -> List[float]:
+    def filter_raw_scan(self, scan: LidarScan) -> LidarScan:
         """Apply filters (e.g. median filter, noise thresholds) to raw sensor data."""
-        pass
+        # TODO: Filter raw scan and return a clean LidarScan.
+        return scan
 
-    def identify_obstacles(self, filtered_ranges: List[float]) -> List[Tuple[float, float]]:
+    def identify_obstacles(self, scan: LidarScan) -> List[Tuple[float, float]]:
         """Identify cluster centroids representing physical obstacles as relative (distance, angle)."""
         pass

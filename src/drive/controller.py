@@ -9,7 +9,7 @@
 import time
 from typing import List, Callable
 from src.common.backend import CarBackend
-from src.common.types import CarTelemetry
+from src.common.types import CarTelemetry, CarCommand
 
 class CarController:
     def __init__(self, backend: CarBackend, dt: float = 0.05, listeners: List[Callable[[CarTelemetry], None]] = None) -> None:
@@ -23,6 +23,7 @@ class CarController:
 
     def drive_distance(self, meters: float, target_speed_mps: float = 1.5) -> None:
         """Drive straight for a specified distance using proportional control."""
+        # TODO: Proportional calculations. Call self.backend.send_command(CarCommand(throttle=...))
         pass
 
     def drive_to_waypoint(self, x: float, y: float, target_speed_mps: float = 1.5) -> None:
@@ -31,4 +32,5 @@ class CarController:
 
     def stop(self) -> None:
         """Command full stop and apply electronic brakes."""
-        pass
+        cmd = CarCommand(throttle=0.0, steering=0.0, brake=1.0)
+        self.backend.send_command(cmd)

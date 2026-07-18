@@ -8,6 +8,7 @@
 from typing import List
 from src.environment.obstacles import ObstacleMap
 from src.environment.track import Track
+from src.common.types import LidarScan
 
 class LidarSimulator:
     def __init__(self, obstacle_map: ObstacleMap, track: Track = None, num_rays: int = 3, max_range_m: float = 5.0) -> None:
@@ -16,9 +17,14 @@ class LidarSimulator:
         self.num_rays: int = num_rays
         self.max_range_m: float = max_range_m
 
-    def generate_scan(self, car_x: float, car_y: float, car_heading_deg: float) -> List[float]:
+    def generate_scan(self, car_x: float, car_y: float, car_heading_deg: float) -> LidarScan:
         """
         Compute raycasted distance measurements from vehicle position to obstacles.
-        Returns a list of distances (meters) matching each ray's angle.
+        Returns a LidarScan object.
         """
-        pass
+        # TODO: Raycasting calculations. For now, returning default mock ranges.
+        return LidarScan(
+            time_s=0.0,
+            angles_deg=[-30.0, 0.0, 30.0],
+            ranges_m=[self.max_range_m] * self.num_rays
+        )
