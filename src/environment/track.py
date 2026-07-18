@@ -6,6 +6,7 @@
 # """
 
 from typing import List, Tuple
+from src.common.types import FrenetState
 
 class Track:
     def __init__(self, track_name: str = "default_oval") -> None:
@@ -19,4 +20,10 @@ class Track:
 
     def is_within_boundaries(self, x: float, y: float) -> bool:
         """Check if a coordinate position is within the track boundaries."""
+        pass
+
+    def cartesian_to_frenet(self, x: float, y: float, heading_deg: float) -> FrenetState:
+        """
+        Convert Cartesian global coordinates (x, y, heading) to track-relative Frenet (s, d, heading_error).
+        """
         pass
