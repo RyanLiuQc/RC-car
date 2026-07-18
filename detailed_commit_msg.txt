@@ -1,6 +1,0 @@
-refactor: introduce structured dataclasses and update backend interfaces
-
-- Add CarCommand, LidarScan, Waypoint, Path, and LaneLineState to src/common/types.py.
-- Update CarTelemetry to reference the structured LidarScan object.
-- Replace set_controls() and set_brake() methods on CarBackend with send_command(command: CarCommand).
-- Refactor SimulatedCar, CarController, RLCarController, LidarSimulator, LidarProcessor, and LaneDetector signatures to conform to the new types.
