@@ -1,12 +1,15 @@
-# """
-# Purpose: Implement safety checks and emergency braking based on obstacle scan inputs.
+# """Safety collision check: the emergency braking logic wrapper.
+#
+# This module implements reactive crash prevention filters. It inspects Lidar or sonar sensor arrays
+# to check if obstacles are within safety margins. If a breach is detected, it overrides the control
+# inputs to issue emergency braking signals, preventing the vehicle from hitting track walls.
 # """
 
 from typing import List
 
 class CollisionAvoidance:
-    def __init__(self, safety_threshold_m: float = 0.5):
-        self.safety_threshold_m = safety_threshold_m
+    def __init__(self, safety_threshold_m: float = 0.5) -> None:
+        self.safety_threshold_m: float = safety_threshold_m
 
     def check_safety(self, sonar_ranges_m: List[float]) -> bool:
         """

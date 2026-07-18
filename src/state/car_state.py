@@ -1,5 +1,8 @@
-# """
-# Purpose: Track statistics, run estimates, and manage health states using telemetry frames.
+# """Telemetry aggregator and metrics manager: tracking vehicle statistics.
+#
+# This manager processes raw telemetry snapshots on every tick. It accumulates metrics
+# such as total mileage, computes averages speed, and checks battery percentages
+# to trigger warnings. It serves as a read-only diagnostics provider for state logs and dashboards.
 # """
 
 from src.common.types import CarTelemetry

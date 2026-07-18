@@ -5,4 +5,6 @@ This package defines the physical and geometry properties of the virtual simulat
 
 ## Level of Abstraction
 * **Level**: World Environment Mapping
-* **Role**: Serves as a database of track lines and physical shapes in the simulated world. Allows physics simulations and virtual sensors to query intersections, lane boundaries, or collision states.
+
+## Relations to Other Components
+This models the physical space in which the simulation runs. The kinematic physics simulation in `src/drive/` queries the track waypoints to guide navigation, while simulated sensors in `src/perception/` query the obstacles map to compute virtual lidar distances. It has no dependencies on control or state logging, acting as a standalone virtual world layout database.

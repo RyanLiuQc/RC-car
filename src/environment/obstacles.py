@@ -1,5 +1,8 @@
-# """
-# Purpose: Define obstacle layout maps and collision detection checks.
+# """Obstacle layout database: tracking simulated hurdles in the virtual world.
+#
+# This class acts as a localized database for static or dynamic obstacles (such as traffic cones
+# and barricades). It allows the virtual Lidar simulator (lidar_sim) to run collision queries
+# and proximity checks to calculate synthetic distance sensors measurements.
 # """
 
 from typing import List, Tuple

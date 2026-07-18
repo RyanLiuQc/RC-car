@@ -1,5 +1,8 @@
-# """
-# Purpose: Render real-time matplotlib plots showing vehicle path and battery levels.
+# """Real-time visualizer dashboard: plotting trajectory and performance stats.
+#
+# This script subscribes a Matplotlib plotting node to the active control loop.
+# It captures telemetry frames to render real-time graphs showing the car's 2D coordinate path,
+# current velocity, steering angles, and battery health, serving as a virtual cockpit.
 # """
 
 import sys

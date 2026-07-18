@@ -1,5 +1,8 @@
-# """
-# Purpose: Define shared data types, enums, and telemetry structures for the RC car.
+# """Shared telemetry dataclasses and enums: the system's common vocabulary.
+#
+# This file defines the telemetry structures (speed, heading, battery, sonar ranges, and positions)
+# and mode states (MANUAL, AUTONOMOUS, ESTOP) passed across all modules. It has no dependencies,
+# serving as the lightweight dictionary that perception, drive, state, and loggers use to communicate.
 # """
 
 from dataclasses import dataclass

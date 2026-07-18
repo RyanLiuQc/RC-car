@@ -1,5 +1,8 @@
-# """
-# Purpose: Execute autonomous missions, including lane-following and waypoint path navigation.
+# """Autonomous mission execution: running computer vision and machine learning drives.
+#
+# This script is the central autonomous navigation loop. It boots the vehicle backend,
+# initializes safety filters, and runs visual lane line trackers or loads a trained
+# Reinforcement Learning policy model to command steering and speed autonomously.
 # """
 
 import sys

@@ -1,5 +1,8 @@
-# """
-# Purpose: Unit tests for CV lane detection algorithms and lidar scanning functions.
+# """Perception pipeline test suite: validating CV and Lidar process algorithms.
+#
+# This test file runs unit tests on the computer vision LaneDetector math and
+# the LidarProcessor scan groups, ensuring synthetic sensor frames are correctly
+# parsed to locate lanes and cluster obstacle ranges.
 # """
 
 from src.perception.lane_detector import LaneDetector

@@ -1,5 +1,8 @@
-# """
-# Purpose: Run interactive cockpit driving controls using keyboard mapping.
+# """Keyboard teleoperation drive cockpit: driving the car with manual terminal keystrokes.
+#
+# This script launches an interactive terminal loop. It intercepts keystroke inputs,
+# parses them using the KeyboardTeleop command mapper, and forwards steering and speed controls
+# directly to the vehicle backend. It acts as the primary manual testing environment.
 # """
 
 import sys

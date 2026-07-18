@@ -1,5 +1,8 @@
-# """
-# Purpose: Execute a simulation run using the 2D kinematic bicycle model.
+# """Simulated run entrypoint: executing a scripted drive on the kinematics simulator.
+#
+# This script boots the SimulatedCar kinematics backend, registers a TelemetryLogger observer,
+# and executes standard drive sequences (using the CarController) to test simple maneuvers
+# offline. Telemetry is saved to a CSV file for analytical verification.
 # """
 
 import sys

@@ -1,12 +1,15 @@
-# """
-# Purpose: Define the virtual driving track boundaries, lane curves, and reference waypoints.
+# """Track geometry and boundaries: defining the simulated world layout.
+#
+# This file stores references to track lanes, boundary walls, and navigation checkpoints.
+# It exposes spatial helpers to locate check-points and query coordinate intersections,
+# allowing the physical simulated vehicle and sensor suites to verify their positions on track.
 # """
 
 from typing import List, Tuple
 
 class Track:
-    def __init__(self, track_name: str = "default_oval"):
-        self.track_name = track_name
+    def __init__(self, track_name: str = "default_oval") -> None:
+        self.track_name: str = track_name
         self.waypoints: List[Tuple[float, float]] = []
         self.boundaries: List[Tuple[float, float, float, float]] = [] # Lines representing walls/lines
 

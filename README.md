@@ -20,9 +20,10 @@ RC-car/
 │
 ├── src/                        # Library source code
 │   ├── common/                 # Contracts and shared data classes (no external libraries)
-│   ├── drive/                  # Guidance, Navigation, and Control
+│   ├── drive/                  # Guidance, Navigation, and Control (contains RL controllers)
 │   ├── environment/            # Map and obstacle database
 │   ├── perception/             # Sensors and computer vision
+│   ├── rl/                     # Gymnasium environments, network models, and reward shaping
 │   ├── state/                  # Aggregators and estimators
 │   └── tools/                  # Observability and teleoperation
 │

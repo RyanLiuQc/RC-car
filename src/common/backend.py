@@ -1,5 +1,9 @@
-# """
-# Purpose: Define the abstract base class for vehicle backends (hardware and simulation interfaces).
+# """The hardware/simulation abstraction: defining the contract for car operations.
+#
+# This interface dictates the primary commands (connect, set_controls, set_brake, update,
+# and telemetry) that any backend (whether a physical servo board, a kinematic physics model,
+# or a remote communication link) must implement. This establishes a strict API boundary,
+# allowing the high-level controllers to steer the car without knowing what physically drives it.
 # """
 
 from abc import ABC, abstractmethod

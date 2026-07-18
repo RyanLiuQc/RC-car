@@ -5,4 +5,6 @@ This package provides observability, telemetry logging (to CSV/JSON), and human 
 
 ## Level of Abstraction
 * **Level**: Auxiliary tools & Observability utilities
-* **Role**: Plugs into the system as an external listener to record runs, or maps physical inputs (like keyboard drivers) to raw throttle and steering control outputs.
+
+## Relations to Other Components
+These are the peripheral observers and manual interfaces. The `telemetry_logger.py` module registers as a callback subscriber to the controller in `src/drive/` to log telemetry ticks without altering control flows, while `keyboard_teleop.py` intercepts console key strokes to pass manual override targets directly into the active vehicle backend.

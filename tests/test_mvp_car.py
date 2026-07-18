@@ -1,5 +1,8 @@
-# """
-# Purpose: Unit tests to verify the simulation backend, controller commands, and safety locks.
+# """Offline validation suite: testing vehicle dynamics and collision logic.
+#
+# This test file verifies that the SimulatedCar kinematics, controller commands,
+# and CollisionAvoidance brakes perform accurately in virtual conditions.
+# It runs fully offline with zero external hardware or network dependencies.
 # """
 
 from src.drive.sim_backend import SimulatedCar

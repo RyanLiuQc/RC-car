@@ -5,4 +5,6 @@ This package houses lane-line computer vision code, Lidar scan processing, and v
 
 ## Level of Abstraction
 * **Level**: Low-level sensor drivers & computer vision estimation
-* **Role**: Parses camera inputs, IMU sensors, and ultrasonic/Lidar readings to estimate the car's orientation relative to lanes and extract physical distances to obstacles.
+
+## Relations to Other Components
+This is the observation generator of the vehicle. It translates camera frames or lidar scans into lane errors and distances, which are consumed by the collision check and navigation logic in `src/drive/`. Its simulation submodule `lidar_sim.py` queries `src/environment/` to calculate mock obstacle range measurements based on the vehicle's simulated coordinates.

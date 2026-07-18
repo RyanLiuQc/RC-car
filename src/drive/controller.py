@@ -1,5 +1,9 @@
-# """
-# Purpose: Implement high-level vehicle commands and coordinate controller loops.
+# """The motion planner and controller: coordinating guidance algorithms.
+#
+# This controller implements execution routines built on top of the CarBackend.
+# It handles PID or proportional logic to drive specified distances, steer toward waypoints,
+# or emergency stop, without caring if it commands a physical chassis or a simulation.
+# It also registers observer listeners to forward telemetry data dynamically on every tick.
 # """
 
 import time
@@ -8,10 +12,10 @@ from src.common.backend import CarBackend
 from src.common.types import CarTelemetry
 
 class CarController:
-    def __init__(self, backend: CarBackend, dt: float = 0.05, listeners: List[Callable[[CarTelemetry], None]] = None):
-        self.backend = backend
-        self.dt = dt
-        self.listeners = list(listeners or [])
+    def __init__(self, backend: CarBackend, dt: float = 0.05, listeners: List[Callable[[CarTelemetry], None]] = None) -> None:
+        self.backend: CarBackend = backend
+        self.dt: float = dt
+        self.listeners: List[Callable[[CarTelemetry], None]] = list(listeners or [])
 
     def _tick(self) -> CarTelemetry:
         """Step simulation/hardware, query telemetry, notify listeners, and sleep."""
