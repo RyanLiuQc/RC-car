@@ -16,9 +16,9 @@ class DriveMode(str, Enum):
 
 @dataclass
 class CarCommand:
-    throttle: float = 0.0  # Range: -1.0 (full reverse) to 1.0 (full forward)
-    steering: float = 0.0  # Range: -1.0 (full left lock) to 1.0 (full right lock)
-    brake: float = 0.0     # Range: 0.0 (released) to 1.0 (full braking force)
+    throttle: float = 0.0  # Normalized command [-1.0 to 1.0]. Ref: 0.0 is idle, 1.0 is full forward.
+    steering: float = 0.0  # Normalized command [-1.0 to 1.0]. Ref: 0.0 is straight, -1.0 is full left, 1.0 is full right.
+    brake: float = 0.0     # Normalized command [0.0 to 1.0]. Ref: 0.0 is released, 1.0 is full electronic brake force.
 
 @dataclass
 class LidarScan:
@@ -28,9 +28,9 @@ class LidarScan:
 
 @dataclass
 class Waypoint:
-    x: float
-    y: float
-    target_speed_mps: float = 1.5
+    x: float                  # Global coordinates in meters (m). Ref: relative to track origin (0.0, 0.0).
+    y: float                  # Global coordinates in meters (m). Ref: relative to track origin (0.0, 0.0).
+    target_speed_mps: float = 1.5 # Target cruise speed in meters per second (m/s).
 
 @dataclass
 class Path:
@@ -45,13 +45,13 @@ class LaneLineState:
 
 @dataclass
 class CarTelemetry:
-    time_s: float
-    mode: DriveMode
-    speed_mps: float
-    heading_deg: float
-    x: float                  # Odometry X position (meters from home)
-    y: float                  # Odometry Y position (meters from home)
-    steering_angle_deg: float
-    battery_pct: float
-    lidar_scan: LidarScan     # Structured obstacle Lidar scan readings
-    crashed: bool
+    time_s: float             # Elapsed system time in seconds (s). Ref: starts at 0.0 on boot.
+    mode: DriveMode           # Current active operational drive state enum.
+    speed_mps: float          # Linear forward velocity in meters per second (m/s). Ref: positive is forward, negative is reverse.
+    heading_deg: float        # Absolute yaw orientation angle in degrees. Ref: [0.0, 360.0) relative to positive X-axis (east).
+    x: float                  # Current global position coordinates X in meters (m). Ref: relative to track origin (0.0, 0.0).
+    y: float                  # Current global position coordinates Y in meters (m). Ref: relative to track origin (0.0, 0.0).
+    steering_angle_deg: float # Actual physical front wheel steer in degrees. Ref: 0.0 is straight, negative is left, positive is right.
+    battery_pct: float        # Remaining onboard battery capacity percentage. Range: [0.0, 100.0].
+    lidar_scan: LidarScan     # Structured obstacle Lidar scan readings.
+    crashed: bool             # Crash status flag. Ref: True if vehicle boundaries intersect track walls or obstacles.
