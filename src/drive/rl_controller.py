@@ -9,14 +9,14 @@
 import time
 from typing import List, Callable
 from src.common.backend import CarBackend
+from src.common.sensor import LidarDevice
 from src.common.types import CarTelemetry, CarCommand, LidarScan
-from src.perception.lidar_sim import LidarSimulator
 from src.rl.agent import PolicyNetwork
 
 class RLCarController:
-    def __init__(self, backend: CarBackend, lidar_sim: LidarSimulator, weights_path: str, listeners: List[Callable[[CarTelemetry], None]] = None) -> None:
+    def __init__(self, backend: CarBackend, lidar_dev: LidarDevice, weights_path: str, listeners: List[Callable[[CarTelemetry], None]] = None) -> None:
         self.backend: CarBackend = backend
-        self.lidar_sim: LidarSimulator = lidar_sim
+        self.lidar_dev: LidarDevice = lidar_dev
         self.listeners: List[Callable[[CarTelemetry], None]] = list(listeners or [])
         
         # Instantiate and load trained weights into the policy network
@@ -30,8 +30,8 @@ class RLCarController:
         """
         telemetry: CarTelemetry = self.backend.telemetry()
         
-        # 1. Generate Lidar scan
-        scan: LidarScan = self.lidar_sim.generate_scan(telemetry.x, telemetry.y, telemetry.heading_deg)
+        # 1. Generate Lidar scan polymorphically
+        scan: LidarScan = self.lidar_dev.read_scan()
         
         # 2. Assemble observation state [speed, lidar_left, lidar_center, lidar_right]
         observation: List[float] = [telemetry.speed_mps] + scan.ranges_m
