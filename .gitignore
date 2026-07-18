@@ -1,0 +1,22 @@
+# Python build and cache artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# CSV / Telemetry logs
+*.csv
+
+# Ignore root-level markdown files to exclude techniques and plan files
+# while tracking README, CONTRIBUTING, and subfolder docs
+/*.md
+!/README.md
+!/CONTRIBUTING.md
