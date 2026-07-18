@@ -17,7 +17,8 @@ Thank you for contributing! To maintain the high quality, modularity, and clean 
 * **Line Length**: Keep lines under 100 characters.
 * **Imports**: Always use clean, absolute imports relative to the `src/` directory (e.g. `from src.common.types import CarTelemetry`).
 * **Header Comments**: Every code file must start with a clean, clear, and simple comment block at the very top explaining the file's purpose.
-* **No Placeholders**: Do not check in incomplete work with TODO blocks in place of functional contracts; use basic `pass` signatures.
+* **Type Annotations**: Explicit type annotations are required for all function parameters, return values, and core class attributes to maintain code clarity.
+* **TODO Placeholders**: Explicit `TODO` comments are accepted to mark incomplete work or identify future implementation tasks.
 
 ## Running Tests
 
