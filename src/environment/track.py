@@ -32,21 +32,27 @@ class Track:
         
         self.boundaries: List[Tuple[float, float, float, float]] = left_segments + right_segments 
 
-    def get_nearest_waypoint(self, x: float, y: float) -> Tuple[float, float]:
-        """Find the coordinates of the closest checkpoint waypoint on the track."""
+    def get_nearest_waypoint_index(self, x: float, y: float) -> int:
+        """Find the index of the closest checkpoint waypoint on the track."""
         min_dist_square = float("inf")
-        nearest_waypoint = (0,0)
-        for w_x, w_y in self.waypoints:
+        nearest_idx = 0
+        for i, (w_x, w_y) in enumerate(self.waypoints):
             dist_sq = (w_x - x)**2 + (w_y - y)**2
             if dist_sq < min_dist_square: 
                 min_dist_square = dist_sq 
-                nearest_waypoint = (w_x,w_y)                 
+                nearest_idx = i
+        return nearest_idx
 
-        return nearest_waypoint    
+    def get_nearest_waypoint(self, x: float, y: float) -> Tuple[float, float]:
+        """Find the coordinates of the closest checkpoint waypoint on the track."""
+        idx = self.get_nearest_waypoint_index(x, y)
+        return self.waypoints[idx]
+
 
     def is_within_boundaries(self, x: float, y: float) -> bool:
         """Check if a coordinate position is within the track boundaries."""
-        # Get nearest_waypoint
+        # TODO: does not work. nearest_waypoint waypoint is unreliable for comparing distance
+        # Get nearest_waypoint 
         w_x,w_y = self.get_nearest_waypoint(x,y)
 
         # Calculate distance from point to nearest_waypoint
@@ -63,7 +69,7 @@ class Track:
         w_x, w_y = self.get_nearest_waypoint(x,y)
         # 2. Extract segment vector v = waypoints[i+1] - waypoints[i]
         
-        
+
         # 3. Extract car vector u = (x,y) - waypoints[i]
         # 4. Project u onto v to find projection factor t
         # 5. Compute lateral distance d = distance to projected point
