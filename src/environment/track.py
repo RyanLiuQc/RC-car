@@ -48,15 +48,59 @@ class Track:
         idx = self.get_nearest_waypoint_index(x, y)
         return self.waypoints[idx]
 
+    def _get_distance_to_segment(self, 
+                                 x: float, 
+                                 y: float, 
+                                 A: Tuple[float, float], # endpoint
+                                 B: Tuple[float, float] # endpoint
+                                 ) -> float:
+        """Compute point to segment distance with projection"""
+        v = (x-A[0],y-A[1]) # segment from waypoint to car
+        u = (B[0]-A[0], B[1]-A[1])
+
+        dot_product = v[0]*u[0] + v[1]*u[1]
+        u_length_squared = u[0]**2 + u[1]**2
+
+        # compute scaling factor of the projection vector
+        scale = dot_product / u_length_squared if u_length_squared != 0 else float('inf')
+        t = max(0.0, min(1.0, dot_product / u_length_squared))
+
+        # find point on segment closest to car. (creates perpendicular line)
+        P = (A[0] + t*u[0], A[1] + t**u[1])
+
+        dist = math.sqrt((A[0]-P[0])**2 + (A[1]-P[1])**2)
+
+        return dist
+        
+    
+    def _get_closest_segment_to_point_idx(self, nearest_waypoint_idx):
+        """Find closest segment to point idx using projection"""
+        k = nearest_waypoint_idx
+
+        n = len(self.waypoints)
+        prev_idx = (k-1) % n
+        next_idx = (k+1) % n
+
+        for i in [prev_idx, next_idx]:
+            pass
+
+
+        
+
+        
+        
 
     def is_within_boundaries(self, x: float, y: float) -> bool:
         """Check if a coordinate position is within the track boundaries."""
         # TODO: does not work. nearest_waypoint waypoint is unreliable for comparing distance
-        # Get nearest_waypoint 
-        w_x,w_y = self.get_nearest_waypoint(x,y)
+        # get nearest waypoint index
+        waypoint_idx = self.get_nearest_waypoint_index(x,y)
 
-        # Calculate distance from point to nearest_waypoint
-        dist = math.sqrt((w_x-x)**2 + (w_y-y)**2)
+       # get closest segment index to the car
+       closest_segment_idx = self._get_closest_segment_to_point_idx()
+
+       # compute distance d from given indexes
+        dist = 0
 
         # check if distance <= track_width
         return dist <= self.track_width/2
