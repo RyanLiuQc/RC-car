@@ -71,36 +71,49 @@ class Track:
         dist = math.sqrt((A[0]-P[0])**2 + (A[1]-P[1])**2)
 
         return dist
-        
-    
-    def _get_closest_segment_to_point_idx(self, nearest_waypoint_idx):
-        """Find closest segment to point idx using projection"""
-        k = nearest_waypoint_idx
 
+    
+    # def _get_closest_segment_to_point_idx(self, nearest_waypoint_idx):
+    #     """Find closest segment to point idx using projection"""
+    #     k = nearest_waypoint_idx
+
+    #     n = len(self.waypoints)
+    #     prev_idx = (k-1) % n
+    #     next_idx = (k+1) % n
+
+    #     for i in [prev_idx, next_idx]:
+    #         pass
+
+
+    def _get_lateral_deviation(self, x: float, y: float) -> float:
+                # get nearest waypoint index
+        k = self.get_nearest_waypoint_index(x,y)
+
+        # get closest segment index to the car
         n = len(self.waypoints)
         prev_idx = (k-1) % n
         next_idx = (k+1) % n
 
-        for i in [prev_idx, next_idx]:
-            pass
+        # compute distance d from given indexes 
+        dist_prev_segment = self._get_distance_to_segment(
+            x, y, 
+            self.waypoints[k], self.waypoints[prev_idx]
+        )
+        dist_next_segment = self._get_distance_to_segment(
+            x, y,
+            self.waypoints[k], self.waypoints[next_idx]
+        )
 
+        dist = min(dist_next_segment, dist_prev_segment)
 
-        
+        return dist
 
         
         
 
     def is_within_boundaries(self, x: float, y: float) -> bool:
         """Check if a coordinate position is within the track boundaries."""
-        # TODO: does not work. nearest_waypoint waypoint is unreliable for comparing distance
-        # get nearest waypoint index
-        waypoint_idx = self.get_nearest_waypoint_index(x,y)
-
-       # get closest segment index to the car
-       closest_segment_idx = self._get_closest_segment_to_point_idx()
-
-       # compute distance d from given indexes
-        dist = 0
+        dist = self._get_lateral_deviation(x, y)
 
         # check if distance <= track_width
         return dist <= self.track_width/2
@@ -110,14 +123,16 @@ class Track:
         Convert Cartesian global coordinates (x, y, heading) to track-relative Frenet (s, d, heading_error).
         """
         # 1. Find closest waypoint index i
-        w_x, w_y = self.get_nearest_waypoint(x,y)
         # 2. Extract segment vector v = waypoints[i+1] - waypoints[i]
-        
-
         # 3. Extract car vector u = (x,y) - waypoints[i]
         # 4. Project u onto v to find projection factor t
         # 5. Compute lateral distance d = distance to projected point
+        d = self._get_lateral_deviation(x,y)
+
         # 6. Set sign of d using cross product : v_x * u_y - v_y * u_x
+
+
+        
         # 7. Compute cumulative distance s along path
         # 8. Compute heading error delta_theta = heading_deg - segment_tangent_angle
         # 9. Return FrenetState ( s =s , d =d , heading_error_deg = delta_theta )
