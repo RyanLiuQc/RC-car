@@ -55,20 +55,22 @@ class Track:
                                  B: Tuple[float, float] # endpoint
                                  ) -> float:
         """Compute point to segment distance with projection"""
-        v = (x-A[0],y-A[1]) # segment from waypoint to car
-        u = (B[0]-A[0], B[1]-A[1])
+        u = (x-A[0],y-A[1])         # tangent vector of the waypoint
+        v = (B[0]-A[0], B[1]-A[1])  # segment from waypoint to car
 
-        dot_product = v[0]*u[0] + v[1]*u[1]
-        u_length_squared = u[0]**2 + u[1]**2
+        dot_product = u[0]*v[0] + u[1]*v[1]
+        v_length_squared = v[0]**2 + v[1]**2 # the norm squared
 
-        # compute scaling factor of the projection vector
-        scale = dot_product / u_length_squared if u_length_squared != 0 else float('inf')
-        t = max(0.0, min(1.0, dot_product / u_length_squared))
+        # compute scaling factor of the projection vector, ensure no division by zero
+        if v_length_squared == 0:
+            t = 0
+        else:
+            t = max(0.0, min(1.0, dot_product / v_length_squared))
 
         # find point on segment closest to car. (creates perpendicular line)
-        P = (A[0] + t*u[0], A[1] + t**u[1])
+        P = (A[0] + t*v[0], A[1] + t*v[1])
 
-        dist = math.sqrt((A[0]-P[0])**2 + (A[1]-P[1])**2)
+        dist = math.sqrt((x-P[0])**2 + (y-P[1])**2)
 
         return dist
 
