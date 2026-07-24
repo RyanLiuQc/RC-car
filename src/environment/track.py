@@ -53,8 +53,10 @@ class Track:
                                  y: float, 
                                  A: Tuple[float, float], # endpoint
                                  B: Tuple[float, float] # endpoint
-                                 ) -> float:
-        """Compute point to segment distance with projection"""
+                                 ) -> Tuple[float, Tuple[float,float], float]]:
+        """Compute point to segment distance with projection
+        return: distance, nearest_point_on_segment (e.i. projected point), t_factor
+        """
         u = (x-A[0],y-A[1])         # tangent vector of the waypoint
         v = (B[0]-A[0], B[1]-A[1])  # segment from waypoint to car
 
@@ -65,29 +67,29 @@ class Track:
         if v_length_squared == 0:
             t = 0
         else:
-            t = max(0.0, min(1.0, dot_product / v_length_squared))
+            # clamping to avoid vector v to scale to infinity, making distance potentially shorter
+            t = max(0.0, min(1.0, dot_product / v_length_squared)) 
 
         # find point on segment closest to car. (creates perpendicular line)
         P = (A[0] + t*v[0], A[1] + t*v[1])
 
         dist = math.sqrt((x-P[0])**2 + (y-P[1])**2)
 
-        return dist
+        return dist, P, t
 
-    
-    # def _get_closest_segment_to_point_idx(self, nearest_waypoint_idx):
-    #     """Find closest segment to point idx using projection"""
-    #     k = nearest_waypoint_idx
+    def _get_closest_segment_info(
+            self, x: float, y: float
+            ) -> Tuple[int, float, Tuple[float,float],float]: 
+        """Get index of closest waypoint segment, distance car to segment 
+        and scaling factor of the direction vector on the segment such that the point on the line
+        is the closest point to the car
 
-    #     n = len(self.waypoints)
-    #     prev_idx = (k-1) % n
-    #     next_idx = (k+1) % n
-
-    #     for i in [prev_idx, next_idx]:
-    #         pass
-
-
-    def _get_lateral_deviation(self, x: float, y: float) -> float:
+        Input: x,y
+        
+        Output: index of segmentt, distance, projection_point, scaling factor
+        
+        """
+        # TODO: make this return more information.
                 # get nearest waypoint index
         k = self.get_nearest_waypoint_index(x,y)
 
@@ -97,25 +99,34 @@ class Track:
         next_idx = (k+1) % n
 
         # compute distance d from given indexes 
-        dist_prev_segment = self._get_distance_to_segment(
+        dist_prev_segment, P, t = self._get_distance_to_segment(
             x, y, 
             self.waypoints[k], self.waypoints[prev_idx]
         )
-        dist_next_segment = self._get_distance_to_segment(
+        dist_next_segment, P, t = self._get_distance_to_segment(
             x, y,
             self.waypoints[k], self.waypoints[next_idx]
         )
 
-        dist = min(dist_next_segment, dist_prev_segment)
+        # dist = min(dist_next_segment, dist_prev_segment)
+        # if closest waypoint = k
+        # index of next segment = k
+        # index of prev segment = k-1
+        if dist_prev_segment < dist_next_segment:
+            dist = dist_prev_segment
+            segment_idx = k-1
 
-        return dist
+        else:
+            dist = dist_next_segment
+            segment_idx = k
 
-        
-        
+
+        return segment_idx, dist, P, t
+    
 
     def is_within_boundaries(self, x: float, y: float) -> bool:
         """Check if a coordinate position is within the track boundaries."""
-        dist = self._get_lateral_deviation(x, y)
+        _, dist, _, _ = self._get_closest_segment_info(x, y)
 
         # check if distance <= track_width
         return dist <= self.track_width/2
@@ -129,16 +140,45 @@ class Track:
         # 3. Extract car vector u = (x,y) - waypoints[i]
         # 4. Project u onto v to find projection factor t
         # 5. Compute lateral distance d = distance to projected point
-        d = self._get_lateral_deviation(x,y)
+        segment_idx, d_magnitude, P, t = self._get_closest_segment_info(x, y)
 
         # 6. Set sign of d using cross product : v_x * u_y - v_y * u_x
-
-
+        # if v cross u > 0 -> dist points to the left -> positive deviation
+        v = ( # B[0]-A[0], B[1]-A[1]
+            self.waypoints[segment_idx+1][0] - self.waypoints[segment_idx][0],
+            self.waypoints[segment_idx+1][1] - self.waypoints[segment_idx][1],
+        )
+        u = ( # x - A, y - A
+            x - self.waypoints[segment_idx][0],
+            y - self.waypoints[segment_idx][1]
+        )
+        cross_product = v[0]*u[1] - v[1]*u[0]
+        sign = -1 if cross_product < 0 else 1
+        d = sign * abs(d_magnitude)
         
         # 7. Compute cumulative distance s along path
+        # arc length = s
+        s = 0
+        n = len(self.waypoints)
+        for i in range(segment_idx): # sum up until the closest segment = waypoint[i], waypoint[(i+1)%n]
+            p1 = self.waypoints[i]
+            p2 = self.waypoints[(i+1) % n]
+            s += math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2) 
+            # s is summed up to the start of the closest segment, we have to add the remaining segment length
+
+        segment_length = math.sqrt(v[0]**2 + v[1]**2)
+        s = s + t*segment_length
+        
+
         # 8. Compute heading error delta_theta = heading_deg - segment_tangent_angle
-        # 9. Return FrenetState ( s =s , d =d , heading_error_deg = delta_theta )
-        pass
+        # if heading_err > 0: heading to the left
+        segment_tangent_angle = math.degrees(math.atan2(v[1], v[0])) # param: (y,x)
+        # heading_err in degrees between -180 to 180 (try out different cadrant to understand)
+        heading_err = ((heading_deg - segment_tangent_angle + 180) % 360) - 180 
+
+
+        # 9. Return FrenetState
+        return FrenetState(s=s, d=d, heading_error_deg=heading_err)
 
 
 def generate_track_boundaries(
