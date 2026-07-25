@@ -25,7 +25,7 @@ class CarCommand:
 class LidarScan:
     """Obstacle scanning points consisting of measured ranges at designated sweep angles."""
     time_s: float = 0.0
-    angles_deg: List[float] = field(default_factory=list)  # Scan angles relative to heading
+    angles_deg: List[float] = field(default_factory=list)  # Scan angles relative to heading in degrees
     ranges_m: List[float] = field(default_factory=list)    # Measured obstacle distances
 
 @dataclass
