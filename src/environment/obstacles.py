@@ -18,3 +18,7 @@ class ObstacleMap:
     def get_obstacles_in_range(self, x: float, y: float, range_m: float) -> List[Tuple[float, float, float]]:
         """Return a list of obstacles within a radius from coordinate (x, y)."""
         pass
+
+    def is_obstacle(self, x: float, y: float) -> bool:
+        """Return if the point is part of an obstacle"""
+        return False
