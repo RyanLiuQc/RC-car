@@ -9,6 +9,16 @@ This repository contains a modular, clean, and highly decoupled software platfor
 
 By enforcing strict boundaries between physical dynamics, track layout geometry, sensor perception systems, and control logic, the platform supports rapid prototyping of classical controllers, computer vision pipelines, and Reinforcement Learning policies.
 
+## Roadmap
+
+- [x] **Phase 1: Repository Architecture & Contracts Scaffolding**
+  * Establish DTOs, interfaces, and directory tree configurations.
+- [x] **Phase 2: Simulation Physics & Raycasting**
+  * Implement the Kinematic 2D bicycle dynamics model.
+  * Implement coordinate centerline boundary check queries.
+  * Implement numerical raymarching for simulated Lidar range sweeps.
+- [ ] **Phase 3: Controller & Trajectory Tracking (Next)**
+
 ## Features
 
 * **Hardware Abstraction Layer**: Concrete classes for simulated physics backends and physical actuators bind to a common vehicle interface contract, enabling hardware-agnostic control logic.
