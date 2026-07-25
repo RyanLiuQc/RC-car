@@ -53,7 +53,7 @@ class Track:
                                  y: float, 
                                  A: Tuple[float, float], # endpoint
                                  B: Tuple[float, float] # endpoint
-                                 ) -> Tuple[float, Tuple[float,float], float]]:
+                                 ) -> Tuple[float, Tuple[float,float], float]:
         """Compute point to segment distance with projection
         return: distance, nearest_point_on_segment (e.i. projected point), t_factor
         """
@@ -99,11 +99,11 @@ class Track:
         next_idx = (k+1) % n
 
         # compute distance d from given indexes 
-        dist_prev_segment, P, t = self._get_distance_to_segment(
+        dist_prev_segment, P_prev, t_prev = self._get_distance_to_segment(
             x, y, 
-            self.waypoints[k], self.waypoints[prev_idx]
+            self.waypoints[prev_idx], self.waypoints[k]
         )
-        dist_next_segment, P, t = self._get_distance_to_segment(
+        dist_next_segment, P_next, t_next = self._get_distance_to_segment(
             x, y,
             self.waypoints[k], self.waypoints[next_idx]
         )
@@ -115,10 +115,14 @@ class Track:
         if dist_prev_segment < dist_next_segment:
             dist = dist_prev_segment
             segment_idx = k-1
+            P = P_prev
+            t = t_prev
 
         else:
             dist = dist_next_segment
             segment_idx = k
+            P = P_next
+            t = t_next
 
 
         return segment_idx, dist, P, t
@@ -143,10 +147,11 @@ class Track:
         segment_idx, d_magnitude, P, t = self._get_closest_segment_info(x, y)
 
         # 6. Set sign of d using cross product : v_x * u_y - v_y * u_x
+        n = len(self.waypoints)
         # if v cross u > 0 -> dist points to the left -> positive deviation
         v = ( # B[0]-A[0], B[1]-A[1]
-            self.waypoints[segment_idx+1][0] - self.waypoints[segment_idx][0],
-            self.waypoints[segment_idx+1][1] - self.waypoints[segment_idx][1],
+            self.waypoints[(segment_idx+1) % n][0] - self.waypoints[segment_idx][0],
+            self.waypoints[(segment_idx+1) % n][1] - self.waypoints[segment_idx][1],
         )
         u = ( # x - A, y - A
             x - self.waypoints[segment_idx][0],
