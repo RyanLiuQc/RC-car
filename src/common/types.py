@@ -7,7 +7,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 class DriveMode(str, Enum):
     MANUAL = "MANUAL"
@@ -66,5 +66,5 @@ class CarTelemetry:
     y: float                  # Current global position coordinates Y in meters (m). Ref: relative to track origin (0.0, 0.0).
     steering_angle_deg: float # Actual physical front wheel steer in degrees. Ref: 0.0 is straight, negative is left, positive is right.
     battery_pct: float        # Remaining onboard battery capacity percentage. Range: [0.0, 100.0].
-    lidar_scan: LidarScan     # Structured obstacle Lidar scan readings.
     crashed: bool             # Crash status flag. Ref: True if vehicle boundaries intersect track walls or obstacles.
+    lidar_scan: Optional[LidarScan] = None # Structured obstacle Lidar scan readings.

@@ -79,8 +79,6 @@ class SimulatedCar(CarBackend):
 
     def telemetry(self) -> CarTelemetry:
         """Construct and return the current simulated telemetry snapshot."""
-        # TODO: Construct a real LidarScan using simulator raycasting data
-        mock_scan = LidarScan(time_s=self.t, angles_deg=[-30.0, 0.0, 30.0], ranges_m=[5.0, 5.0, 5.0])
         return CarTelemetry(
             time_s=self.t,
             mode=self.mode,
@@ -90,6 +88,6 @@ class SimulatedCar(CarBackend):
             y=self.y,
             steering_angle_deg=math.degrees(self.steering),
             battery_pct=self.battery,
-            lidar_scan=mock_scan,
+            lidar_scan=None,
             crashed=False
         )
