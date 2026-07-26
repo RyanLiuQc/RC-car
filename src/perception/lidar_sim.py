@@ -50,7 +50,7 @@ class LidarSimulator(LidarDevice):
         
         # TODO: Compute real intersection distances using car_x, car_y, car_heading
         for ray_angle in self.angles_deg:
-            abs_ray_angle = math.radians(ray_angle + telemetry.heading_deg)
+            abs_ray_angle = math.radians(ray_angle + car_heading)
 
             # unit vector for the direction of the ray
             unit_directional_vector = (math.cos(abs_ray_angle), math.sin(abs_ray_angle))

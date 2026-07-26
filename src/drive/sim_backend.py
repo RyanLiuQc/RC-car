@@ -23,7 +23,7 @@ class SimulatedCar(CarBackend):
         self.t: float = 0.0
         self.x: float = 0.0
         self.y: float = 0.0
-        self.heading: float = 0.0       # Radians
+        self.heading: float = 0.0       # Radians for kinematics calculation
         self.speed: float = 0.0         # m/s
         self.steering: float = 0.0      # Radians
         
@@ -86,7 +86,7 @@ class SimulatedCar(CarBackend):
             heading_deg=math.degrees(self.heading),
             x=self.x,
             y=self.y,
-            steering_angle_deg=math.degrees(self.steering),
+            steering_angle_deg=math.degrees(self.steering), # in DEGREES
             battery_pct=self.battery,
             lidar_scan=None,
             crashed=False
