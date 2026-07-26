@@ -23,14 +23,14 @@ The action space is a 1D continuous array of shape `(2,)`:
 ### Observation Space (`gym.spaces.Box`)
 The observation space is a 1D continuous array of shape `(6,)`:
 
-| Index | Observation Variable | Physical Unit | Min Bound | Max Bound | Description |
+| Index | Observation Variable | Physical Unit | Raw Min / Max | Normalized Range | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `0` | `speed_mps` | meters / second (m/s) | `0.0` | `5.0` | Vehicle forward linear velocity |
-| `1` | `d` | meters (m) | `-2.0` | `2.0` | Frenet lateral offset from track centerline (positive left, negative right) |
-| `2` | `heading_error_deg` | degrees (deg) | `-180.0` | `180.0` | Yaw angle error relative to track segment tangent |
-| `3` | `lidar_right` | meters (m) | `0.0` | `5.0` | Right Lidar ray distance (-30 deg sweep) |
-| `4` | `lidar_front` | meters (m) | `0.0` | `5.0` | Center Lidar ray distance (0 deg sweep) |
-| `5` | `lidar_left` | meters (m) | `0.0` | `5.0` | Left Lidar ray distance (+30 deg sweep) |
+| `0` | `speed_mps` | meters / second (m/s) | `0.0` to `5.0` | `[0.0, 1.0]` | Scaled vehicle linear velocity (`speed / 5.0`) |
+| `1` | `d` | meters (m) | `-2.0` to `2.0` | `[-1.0, 1.0]` | Scaled Frenet lateral offset from centerline (`d / 1.0`) |
+| `2` | `heading_error_deg` | degrees (deg) | `-180.0` to `180.0` | `[-1.0, 1.0]` | Scaled yaw angle error (`heading_error / 180.0`) |
+| `3` | `lidar_right` | meters (m) | `0.0` to `5.0` | `[0.0, 1.0]` | Scaled right Lidar ray distance (`range / 5.0`) |
+| `4` | `lidar_front` | meters (m) | `0.0` to `5.0` | `[0.0, 1.0]` | Scaled center Lidar ray distance (`range / 5.0`) |
+| `5` | `lidar_left` | meters (m) | `0.0` to `5.0` | `[0.0, 1.0]` | Scaled left Lidar ray distance (`range / 5.0`) |
 
 ## Reward Function (`RewardCalculator`)
 
