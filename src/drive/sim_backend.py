@@ -88,6 +88,6 @@ class SimulatedCar(CarBackend):
             y=self.y,
             steering_angle_deg=math.degrees(self.steering), # in DEGREES
             battery_pct=self.battery,
-            lidar_scan=None,
-            crashed=False
+            lidar_scan=None,    # unused. Sensors are seperated from car physics
+            crashed=False       # unused
         )

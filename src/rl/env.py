@@ -13,6 +13,7 @@ from typing import Tuple, Dict, Any, List
 from src.drive.sim_backend import SimulatedCar
 from src.perception.lidar_sim import LidarSimulator
 from src.environment.track import Track
+from src.environment.obstacles import ObstacleMap
 from src.common.types import CarTelemetry, FrenetState, CarCommand
 from src.rl.rewards import RewardCalculator
 
@@ -25,12 +26,15 @@ class RCCarEnv(gym.Env):
             self, car: SimulatedCar, 
             lidar_sim: LidarSimulator, 
             track: Track, 
-            render_mode: str = None
+            obstacle_map: ObstacleMap = None,
+            render_mode: str = None,
+            max_episode_steps: int = 1000
             ) -> None:
         
         self.car: SimulatedCar = car
         self.lidar_sim: LidarSimulator = lidar_sim
         self.track: Track = track
+        self.obstacle_map = obstacle_map
         self.render_mode = render_mode
         self.rewards: RewardCalculator = RewardCalculator()
 
@@ -47,67 +51,128 @@ class RCCarEnv(gym.Env):
         )
 
         # Observation space: [speed, cross_track_error (d), heading_error, lidar_right, lidar_center, lidar_left]
-        low_obs = np.array([0.0, -self.track.track_width/2-1, -180, 0.0, 0.0, 0.0], dtype=np.float32)
-        high_obs = np.array([self.car.max_speed, -self.track.track_width/2+1, 180, 5.0, 5.0, 5.0], dtype=np.float32)
-        observation_space: spaces.Space = spaces.Box(
+        low_obs = np.array([0.0, -1.0, -1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+        high_obs = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+        self.observation_space: spaces.Space = spaces.Box(
             low=low_obs,
             high=high_obs,
             shape=(6,),
             dtype=np.float32
         )
 
+        # Step count
+        self.current_step = 0
+        self.max_episode_steps = max_episode_steps
+
     def reset(self, seed: int = None, options: dict = None) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Reset the car physics state and simulator to initial track coordinates.
         Returns the initial observation list.
         """
+        self.current_step = 0
         super().reset(seed=seed)
 
         # Reset car position to start line (0,0) and zero speed
-        self.t = 0.0
-        self.x = 0.0
-        self.y = 0.0
-        self.heading = 0.0       # Radians
-        self.speed = 0.0         # m/s
-        self.steering = 0.0      # Radians
-        self.battery = 100.0
+        self.car.t = 0.0
+        self.car.x = 0.0
+        self.car.y = 0.0
+        self.car.heading = 0.0       # Radians
+        self.car.speed = 0.0         # m/s
+        self.car.steering = 0.0      # Radians
+        self.car.battery = 100.0
         self.car.connect()
 
         self.car.send_command(CarCommand(throttle=0.0, steering=0.0, brake=0.0))
 
         # Query initial telemetry and lidar scan
         telemetry = self.car.telemetry()
-        lidar_scan = self.lidar_sim.read_scan
+        lidar_scan = self.lidar_sim.read_scan()
 
         # Construct initial observation vector
+        frenet = self.track.cartesian_to_frenet(self.car.x, self.car.y, math.degrees(self.car.heading))
+        half_width = self.track.track_width / 2.0
+
+        obs = np.array([ 
+            telemetry.speed_mps / 5.0,          # Normalized
+            frenet.d / half_width,
+            frenet.heading_error_deg / 180.0,
+            lidar_scan.ranges_m[0] / 5.0,
+            lidar_scan.ranges_m[1] / 5.0,
+            lidar_scan.ranges_m[2] / 5.0
+        ], dtype=np.float32)
 
         # Return (initial_obs, info_dict)
-        
-        return [0.0, 0.0, 0.0, 5.0, 5.0, 5.0]
+        info = {}
+        return obs, info
+    
+    def _check_crash(self, telemetry: CarTelemetry, frenet: FrenetState) -> bool:
+        """Check if vehicle has driven off-track or hit an obstacle."""
+        is_off_track = abs(frenet.d) > self.track.track_width / 2.0
+        is_obstacle_hit = self.obstacle_map and self.obstacle_map.is_obstacle(telemetry.x,telemetry.y)
+            
+        return is_off_track or is_obstacle_hit
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool, Dict[str, Any]]:
         """
         Apply control actions, update physical dynamics, and calculate the step metrics.
         Returns a tuple of (observation, reward, terminated, truncated, info).
         """
+        self.current_step += 1
 
         #  Unpack throttle and steering from action
+        throttle = action[0]
+        steering = action[1]
+
         #  Issue CarCommand to self.car and call self.car.update(dt=0.05)
+        command = CarCommand(throttle=throttle, steering=steering)
+        self.car.send_command(command)
+        self.car.update(dt=0.05)
+
         #  Query frenet = self.track.cartesian_to_frenet(...)
         telemetry = self.car.telemetry()
         frenet = self.track.cartesian_to_frenet(telemetry.x, telemetry.y, telemetry.heading_deg)
+
         #  Construct observation vector [speed, d, heading_err, lidar_r, lidar_c, lidar_l]
         lidar_scan = self.lidar_sim.read_scan()
+        half_width = self.track.track_width / 2.0
+        obs = np.array([                
+            telemetry.speed_mps / 5.0,      # Normalized
+            frenet.d / half_width, 
+            frenet.heading_error_deg / 180,
+            lidar_scan.ranges_m[0] / 5.0,
+            lidar_scan.ranges_m[1] / 5.0,
+            lidar_scan.ranges_m[2] / 5.0
+            ], dtype=np.float32)
 
         #  Compute reward = self.rewards.compute_reward(telemetry, frenet)
+        reward = self.rewards.compute_reward(telemetry=telemetry, frenet_state=frenet)
+
         #  Determine terminated flag (crashed or off-track)
+        terminated = self._check_crash(telemetry, frenet)
+
         #  If self.render_mode == "human", trigger rendering visualization
-        #  Return (obs, reward, terminated, truncated, info)
-
-
-
         if self.visualizer and self.render_mode == "human":
             self.visualizer.update(telemetry=telemetry, scan=lidar_scan, frenet=frenet)
+
+        # Truncated: TODO: set limit of episodes. add to init and keep count of steps
+        truncated = self.current_step >= self.max_episode_steps
+
+        # info
+        info = {
+            "s": frenet.s,                             # Total distance traveled along centerline (m)
+            "d": frenet.d,                             # Raw lateral offset (m)
+            "heading_error_deg": frenet.heading_error_deg, # Raw yaw error (deg)
+            "speed_mps": telemetry.speed_mps,          # Raw speed (m/s)
+            "is_crashed": terminated,                  # Crash status
+            "step": self.current_step                  # Step count
+        }
+
+
+        #  Return (obs, reward, terminated, truncated, info)
+        return (obs, reward, terminated, truncated, info)
+
+
+ 
 
         # throttle: float = action[0]
         # steering: float = action[1]
