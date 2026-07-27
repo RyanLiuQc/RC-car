@@ -89,7 +89,7 @@ class RCCarEnv(gym.Env):
         lidar_scan = self.lidar_sim.read_scan()
 
         # Construct initial observation vector
-        frenet = self.track.cartesian_to_frenet(self.car.x, self.car.y, math.degrees(self.car.heading))
+        frenet = self.track.cartesian_to_frenet(self.car.x, self.car.y, np.degrees(self.car.heading))
         half_width = self.track.track_width / 2.0
 
         obs = np.array([ 
@@ -129,8 +129,8 @@ class RCCarEnv(gym.Env):
         self.car.update(dt=0.05)
 
         #  Query frenet = self.track.cartesian_to_frenet(...)
-        telemetry = self.car.telemetry()
-        frenet = self.track.cartesian_to_frenet(telemetry.x, telemetry.y, telemetry.heading_deg)
+        telemetry: CarTelemetry = self.car.telemetry()
+        frenet: FrenetState = self.track.cartesian_to_frenet(telemetry.x, telemetry.y, telemetry.heading_deg)
 
         #  Construct observation vector [speed, d, heading_err, lidar_r, lidar_c, lidar_l]
         lidar_scan = self.lidar_sim.read_scan()
