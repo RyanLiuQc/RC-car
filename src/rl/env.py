@@ -144,11 +144,12 @@ class RCCarEnv(gym.Env):
             lidar_scan.ranges_m[2] / 5.0
             ], dtype=np.float32)
 
-        #  Compute reward = self.rewards.compute_reward(telemetry, frenet)
-        reward = self.rewards.compute_reward(telemetry=telemetry, frenet_state=frenet)
-
         #  Determine terminated flag (crashed or off-track)
         terminated = self._check_crash(telemetry, frenet)
+
+        #  Compute reward = self.rewards.compute_reward(telemetry, frenet)
+        reward = self.rewards.compute_reward(telemetry=telemetry, frenet_state=frenet, crashed=terminated)
+
 
         #  If self.render_mode == "human", trigger rendering visualization
         if self.visualizer and self.render_mode == "human":
@@ -170,50 +171,6 @@ class RCCarEnv(gym.Env):
 
         #  Return (obs, reward, terminated, truncated, info)
         return (obs, reward, terminated, truncated, info)
-
-
- 
-
-        # throttle: float = action[0]
-        # steering: float = action[1]
-        
-        # # 1. Apply controls and step the physics backend
-        # cmd = CarCommand(throttle=throttle, steering=steering)
-        # self.car.send_command(cmd)
-        # self.car.update(0.05)
-        
-        # # 2. Query Cartesian telemetry
-        # telemetry: CarTelemetry = self.car.telemetry()
-        
-        # # 3. Transform Cartesian to track-relative Frenet coordinates
-        # frenet_state: FrenetState = self.track.cartesian_to_frenet(
-        #     telemetry.x, telemetry.y, telemetry.heading_deg
-        # )
-        
-        # # 4. Construct observation vector
-        # # State observations: [speed, lateral_offset (d), heading_error, lidar_left, lidar_center, lidar_right]
-        # obs: List[float] = [
-        #     telemetry.speed_mps,
-        #     frenet_state.d,
-        #     frenet_state.heading_error_deg
-        # ] + telemetry.lidar_scan.ranges_m
-        
-        # # 5. Compute step reward using the Frenet state
-        # # TODO: Track width should be queried from track configuration
-        # track_width = 1.6
-        # is_off_track: bool = abs(frenet_state.d) > (track_width / 2.0)
-        # terminated: bool = telemetry.crashed or is_off_track
-        # truncated: bool = False
-        
-        # reward: float = self.rewards.compute_reward(telemetry, frenet_state)
-        
-        # info: Dict[str, Any] = {
-        #     "s": frenet_state.s,
-        #     "d": frenet_state.d,
-        #     "heading_error": frenet_state.heading_error_deg
-        # }
-        
-        # return obs, reward, terminated, truncated, info
 
 
     def render(self) -> None:
