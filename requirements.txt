@@ -4,3 +4,4 @@ matplotlib
 pytest
 gymnasium
 pygame
+torch

@@ -5,9 +5,13 @@
 # throttle and steering inputs. During training, the weights in these layers are optimized.
 # """
 
+import torch
+import torch.nn as nn
+from torch.distributions import Normal
+import numpy as np
 from typing import List
 
-class PolicyNetwork:
+class PolicyNetwork(nn.Module):
     def __init__(self, state_dim: int = 4, action_dim: int = 2) -> None:
         self.state_dim: int = state_dim
         self.action_dim: int = action_dim
@@ -25,3 +29,7 @@ class PolicyNetwork:
         """Load trained neural network model weights from disk."""
         # TODO: Load PyTorch state dictionary from the models directory.
         pass
+
+class ValueNetwork:
+    """For critic"""
+    pass
