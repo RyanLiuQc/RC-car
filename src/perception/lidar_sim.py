@@ -48,7 +48,7 @@ class LidarSimulator(LidarDevice):
         # Step size for raymarching in meters (5cm resolution)
         step_m = 0.05
         
-        # TODO: Compute real intersection distances using car_x, car_y, car_heading
+        # Compute real intersection distances using car_x, car_y, car_heading with raymarching
         for ray_angle in self.angles_deg:
             abs_ray_angle = math.radians(ray_angle + car_heading)
 
@@ -61,6 +61,7 @@ class LidarSimulator(LidarDevice):
                 d = step_m * i
                 p = (car_x + d*unit_directional_vector[0], car_y + d*unit_directional_vector[1])
 
+                # Check 1: Did the ray hit a boundary?
                 if self.track and not self.track.is_within_boundaries(p[0], p[1]):
                     hit_dist = d
                     break
