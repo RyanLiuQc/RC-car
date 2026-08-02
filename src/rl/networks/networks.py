@@ -1,6 +1,6 @@
-# """PyTorch neural network architectures: Actor Policy and Critic Value Networks.
+# """PyTorch neural network architectures: Actor Policy and Critic Value Networks in a single class.
 #
-# This file defines the neural network building blocks (PolicyNetwork and ValueNetwork)
+# This file defines the neural network building blocks (PolicyNetwork)
 # that map continuous 6D observation states to control actions (throttle and steering)
 # and evaluate state values for Actor-Critic algorithms like PPO and SAC.
 # """
@@ -83,9 +83,52 @@ class PolicyNetwork(nn.Module):
 
         return action_mean, action_std, state_value
 
-    def load_weights(self, weights_path: str) -> None:
-        """Load trained neural network model weights from disk."""
-        # TODO: Load PyTorch state dictionary from disk.
+    def get_action(self, obs: np.ndarray, deterministic: bool = False) -> Tuple[np.ndarray, torch.Tensor, torch.Tensor]:
+        """
+        Sample action for environment step: returns (clipped_action_numpy, log_prob_tensor, value_tensor).
+        """
+        # Convert obs numpy array to torch.float32 tensor
+        obs_tensor = torch.as_tensor(obs, dtype=torch.float32)
+
+        # Call self.forward(obs_tensor) to get (mean, std, value)
+        mean, std, state_value = self.forward(obs_tensor)
+
+        
+        if deterministic:
+            # action_tensor = mean
+            action = mean
+            dist = Normal(mean, 0)
+            log_prob = torch.Tensor(1.0)
+        else:
+            # sample from normal distribution
+            dist = Normal(mean, std)
+            action = dist.sample()
+
+            # Compute log_prob
+            # sum both actions' probability (log throttle_prob and log steering prob)
+            # this is the same as multiplying their prob after taking exp of the sum. (independent events)
+            log_prob = dist.log_prob(action).sum(dim=-1)
+
+
+
+        # Clip action tensor to [-1.0, 1.0] and convert to numpy array
+        clipped_action = torch.clamp(action, -1, 1)
+        action_np = clipped_action.numpy()
+
+        # Return (action_np, log_prob, value)
+        return action_np, log_prob, state_value
+
+    def evaluate_actions(self, obs_batch: torch.Tensor, action_batch: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Used during PPO mini-batch updates: evaluates log_probs, values, and entropy for past trajectory samples.
+        """
+        # Call self.forward(obs_batch) -> (mean, std, values)
+        mean, std, state_value = self.forward(obs_batch)
+
+        # Create dist = Normal(mean, std)
+        # Compute log_probs = dist.log_prob(action_batch).sum(dim=-1)
+        # Compute entropy = dist.entropy().sum(dim=-1)
+        # Return (log_probs, values.squeeze(-1), entropy)
         pass
 
 
