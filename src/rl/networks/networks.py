@@ -120,16 +120,23 @@ class PolicyNetwork(nn.Module):
 
     def evaluate_actions(self, obs_batch: torch.Tensor, action_batch: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
+        For On-Policy training (PPO, A2C)
         Used during PPO mini-batch updates: evaluates log_probs, values, and entropy for past trajectory samples.
         """
         # Call self.forward(obs_batch) -> (mean, std, values)
-        mean, std, state_value = self.forward(obs_batch)
+        mean, std, state_values = self.forward(obs_batch)
 
         # Create dist = Normal(mean, std)
+        dist = Normal(mean, std)
+
         # Compute log_probs = dist.log_prob(action_batch).sum(dim=-1)
+        log_probs = dist.log_prob(action_batch).sum(dim=-1)
+
         # Compute entropy = dist.entropy().sum(dim=-1)
+        entropy = dist.entropy().sum(dim=-1)
+
         # Return (log_probs, values.squeeze(-1), entropy)
-        pass
+        return log_probs, state_values.squeeze(-1), entropy
 
 
 # class ValueNetwork(nn.Module):
