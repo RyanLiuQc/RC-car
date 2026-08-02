@@ -85,6 +85,7 @@ class PolicyNetwork(nn.Module):
 
     def get_action(self, obs: np.ndarray, deterministic: bool = False) -> Tuple[np.ndarray, torch.Tensor, torch.Tensor]:
         """
+        For Actor
         Sample action for environment step: returns (clipped_action_numpy, log_prob_tensor, value_tensor).
         """
         # Convert obs numpy array to torch.float32 tensor
@@ -120,6 +121,7 @@ class PolicyNetwork(nn.Module):
 
     def evaluate_actions(self, obs_batch: torch.Tensor, action_batch: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
+        For Actor
         For On-Policy training (PPO, A2C)
         Used during PPO mini-batch updates: evaluates log_probs, values, and entropy for past trajectory samples.
         """

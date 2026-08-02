@@ -1,4 +1,4 @@
-# """Experience Replay Buffer: storing transition tuples for off-policy RL algorithms.
+# """Experience Replay Buffer: storing transition tuples for off-policy (SAC) RL algorithms.
 #
 # This data structure stores transition tuples (obs, action, reward, next_obs, terminated)
 # in a fixed-size circular ring buffer. It allows off-policy algorithms (like Soft Actor-Critic - SAC)
