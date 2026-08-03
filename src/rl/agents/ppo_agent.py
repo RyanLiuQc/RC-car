@@ -7,8 +7,8 @@
 
 import numpy as np
 from src.rl.base_agent import BaseAgent
-from rl.networks.actor import ActorNetwork
-from rl.networks.critic import CriticNetwork
+from src.rl.networks.actor import ActorNetwork
+from src.rl.networks.critic import CriticNetwork
 
 
 class PPOAgent(BaseAgent):

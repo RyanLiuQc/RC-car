@@ -29,7 +29,7 @@ def main() -> None:
     car = SimulatedCar(wheelbase=0.25, max_speed=5.0)
     car.connect()
 
-    lidar_device = LidarSimulator(obstacle_map=obs_map, backend=car, track=track, num_rays=5, max_range_m=5.0)
+    lidar_device = LidarSimulator(obstacle_map=obs_map, backend=car, track=track, num_rays=3, max_range_m=5.0)
 
     # 2. Instantiate TrackVisualizer dashboard
     visualizer = TrackVisualizer(track=track, title="Autonomous Driving Simulator - Random Agent Baseline")

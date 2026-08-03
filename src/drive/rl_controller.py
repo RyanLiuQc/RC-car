@@ -6,13 +6,14 @@
 # control outputs, and dispatches throttle and steering actions directly to the vehicle actuators.
 # """
 
+import numpy as np
 import time
 from typing import List, Callable
 from src.common.backend import CarBackend
 from src.common.sensor import LidarDevice
 from src.common.types import CarTelemetry, CarCommand, LidarScan
-from rl.base_agent import BaseAgent
-from rl.agents import * # RandomAgent, A2CAgent, PPOAgent, SACAgent
+from src.rl.base_agent import BaseAgent
+from src.rl.agents import * # RandomAgent, A2CAgent, PPOAgent, SACAgent
 
 class RLCarController:
     def __init__(

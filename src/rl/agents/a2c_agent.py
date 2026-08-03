@@ -8,13 +8,21 @@
 import numpy as np
 import torch
 import torch.optim as optim
+import torch.nn.functional as F
 from src.rl.base_agent import BaseAgent
 from src.rl.networks import ActorNetwork, CriticNetwork
 
 class A2CAgent(BaseAgent):
     """Advantage Actor-Critic (A2C) Agent"""
 
-    def __init__(self, obs_dim: int = 6, action_dim: int = 2, actor_lr: float = 1e-4, critic_lr: float = 3e-4, gamma: float = 0.99) -> None:
+    def __init__(
+            self, 
+            obs_dim: int = 6, 
+            action_dim: int = 2, 
+            actor_lr: float = 1e-4, 
+            critic_lr: float = 3e-4, 
+            gamma: float = 0.99, 
+            entropy_coef: float = 0.01) -> None:
         """Initialize ActorNetwork, CriticNetwork, Adam optimizers, and discount factor gamma."""
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
@@ -27,6 +35,8 @@ class A2CAgent(BaseAgent):
         # Instantiate Adam optimizers with independent learning rates
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=actor_lr)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=critic_lr)
+
+        self.entropy_coef = entropy_coef
 
     def select_action(self, obs: np.ndarray, deterministic: bool = False) -> np.ndarray:
         """
@@ -47,9 +57,73 @@ class A2CAgent(BaseAgent):
         4. Compute Actor Loss: L_actor = - (new_log_probs * Advantage.detach()) - (c2 * entropy)
         5. Compute Critic Loss: L_critic = MSE(V(s), R_t + gamma * V(s_next))
         6. Zero gradients, perform backpropagation, and step optimizers.
+
+        Input: 
+        trajectory_buffer = {
+            "obs": obs,
+            "action": action,
+            "reward": reward,
+            "next_obs": next_obs, # after action was taken
+            "terminated": terminated # if next_obs hits obstacle or wall
+        }
         """
-        # TODO: Implement A2C gradient updates
-        return {}
+        # Convert all buffer inputs into float32 Tensors (1, N)
+        # get curr obs
+        obs_np = trajectory_buffer['obs'] # shape (6,)
+        obs_tensor = torch.as_tensor(obs_np, dtype=torch.float32).unsqueeze(0) # shape (1,6)
+
+        action_np = trajectory_buffer['action']
+        action_tensor = torch.as_tensor(action_np, dtype=torch.float32).unsqueeze(0)
+
+        # get next obs after action was taken
+        next_obs_np = trajectory_buffer['next_obs']
+        next_obs_tensor = torch.as_tensor(next_obs_np, dtype=torch.float32).unsqueeze(0) 
+
+        # Convert scalar reward & terminated into Tensors
+        reward_tensor = torch.as_tensor(trajectory_buffer['reward'], dtype=torch.float32).unsqueeze(0)
+        # to mask next_state_value, uses 1-terminated 
+        terminated_tensor = torch.as_tensor(trajectory_buffer['terminated'], dtype=torch.float32).unsqueeze(0)
+
+        # query current state value
+        state_value = self.critic(obs_tensor) # execute __call__() method instead of forward
+        # nn.Module.__call__() does much more than forward()
+        with torch.no_grad(): # same as detach
+            next_state_value = self.critic(next_obs_tensor) # V(S_{t+1})
+
+        # compute advantage (in this case: 1D Temporal Difference Error)
+        # if crash (terminated) after action is taken, then ignore next_state value, put it to 0
+        target_state_value = reward_tensor + (self.gamma*next_state_value)*(1.0-terminated_tensor)
+        A_t = (target_state_value - state_value).detach() # do not compute gradient for this
+        # since it is not part of what we want to optimize. We want to optimize log prob (for action)
+
+        # Evaluate new_log_probs and entropy using self.actor.evaluate_actions(obs, action).
+        new_log_prob, entropy = self.actor.evaluate_actions(obs_tensor, action_tensor)
+
+        # Compute Actor Loss: L_actor = - (new_log_probs * Advantage.detach()) - (c2 * entropy)
+        # entropy parameter added encoourage exploration
+        # if action has high entropy 
+        L_actor = - (new_log_prob * A_t).mean()  - (self.entropy_coef * entropy.mean())
+
+        # Compute Critic Loss: L_critic = MSE(V(s), R_t + gamma * V(s_next))
+        # L_critic = ((state_value - target_state_value)**2).mean()
+        L_critic = F.mse_loss(state_value, target_state_value)
+
+        # Zero gradients, perform backpropagation, and step optimizers.
+        self.actor_optimizer.zero_grad() # discard weigths from previous train step
+        L_actor.backward() # compute gradient of the loss wrt weights
+        self.actor_optimizer.step() # update towards min loss (theta = theta - alpha*grad_L)
+
+        self.critic_optimizer.zero_grad()
+        L_critic.backward()
+        self.critic_optimizer.step()
+
+
+        return {
+            "actor_loss": L_actor.item(),
+            "critic_loss": L_critic.item(),
+            "entropy": entropy.mean().item(),
+            "advantage": A_t.mean().item()
+        }
 
     def save(self, filepath: str) -> None:
         """Save both Actor and Critic network state dicts into a single checkpoint file."""
