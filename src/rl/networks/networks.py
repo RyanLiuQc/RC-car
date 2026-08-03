@@ -1,11 +1,10 @@
-"""
-### Transfered to 2 different classes for actor and critic ###
-PyTorch neural network architectures: Actor Policy and Critic Value Networks in a single class.
-
-This file defines the neural network building blocks (PolicyNetwork)
-that map continuous 6D observation states to control actions (throttle and steering)
-and evaluate state values for Actor-Critic algorithms like PPO and SAC.
-"""
+# """Legacy Combined Actor-Critic Policy Network (Transitioning to Separated Classes).
+#
+# NOTE: This file contains the initial single-class PolicyNetwork architecture combining both
+# Actor and Critic heads into a shared backbone. The codebase is transitioning to separate
+# ActorNetwork (actor.py) and CriticNetwork (critic.py) classes for improved modularity,
+# zero gradient interference, and compatibility with Soft Actor-Critic (SAC).
+# """
 
 import torch
 import torch.nn as nn
@@ -16,7 +15,7 @@ from typing import List, Tuple
 class PolicyNetwork(nn.Module):
     """Policy Network is initializing 2 different Neural Network: 
     Actor Network and Critic Network in the same class. (Actor-Critic Network)
-    This can also be done with 2 seperate class
+    This can also be done with 2 separate classes (ActorNetwork and CriticNetwork).
     """
 
     def __init__(self, obs_dim: int = 6, action_dim: int = 2, hidden_dim: int = 64) -> None:
@@ -51,16 +50,14 @@ class PolicyNetwork(nn.Module):
         # Create Critic Value head: Linear(hidden_dim, 1)
         # It maps the latent feature representation of an observation s 
         # to a single scalar value V(s) (the estimated expected cumulative reward from state s).
-        # nn.Parameters lets pytorch now these are trainable weights
+        # nn.Parameters lets pytorch know these are trainable weights
         self.critic_value_head = nn.Linear(hidden_dim, 1)
 
-        
         # Define trainable log standard deviation parameter for Gaussian action sampling:
         # self.log_std = nn.Parameter(torch.zeros(action_dim))
         # taking e^log_std to get std will force std to be positive. 
         # we first initialize it to 0,0 
         self.log_std = nn.Parameter(torch.zeros(action_dim))
-
 
     def forward(self, observation: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -72,7 +69,6 @@ class PolicyNetwork(nn.Module):
             action_mean: Tensor of shape (batch, action_dim)
             action_std:  Tensor of shape (action_dim,) or broadcasted
             state_value: Tensor of shape (batch, 1)
-    
         """
         # get hidden layers' features (output of the backbone)
         features = self.backbone(observation) 
@@ -96,9 +92,7 @@ class PolicyNetwork(nn.Module):
         # Call self.forward(obs_tensor) to get (mean, std, value)
         mean, std, state_value = self.forward(obs_tensor)
 
-        
         if deterministic:
-            # action_tensor = mean
             action = mean
             dist = Normal(mean, 0)
             log_prob = torch.Tensor(1.0)
@@ -111,8 +105,6 @@ class PolicyNetwork(nn.Module):
             # sum both actions' probability (log throttle_prob and log steering prob)
             # this is the same as multiplying their prob after taking exp of the sum. (independent events)
             log_prob = dist.log_prob(action).sum(dim=-1)
-
-
 
         # Clip action tensor to [-1.0, 1.0] and convert to numpy array
         clipped_action = torch.clamp(action, -1, 1)
@@ -150,13 +142,6 @@ class PolicyNetwork(nn.Module):
         # squeeze state_values to match actor and critic tensors
         return log_probs, state_values.squeeze(-1), entropy 
 
-
-    def load_weights(self, path: str):
+    def load_weights(self, path: str) -> None:
+        """Load trained neural network model weights from disk."""
         pass
-
-# class ValueNetwork(nn.Module):
-#     """Critic Value Network estimating state baseline values V(s)."""
-#     def __init__(self, obs_dim: int = 6) -> None:
-#         super().__init__()
-#         self.obs_dim: int = obs_dim
-#         # TODO: Implement Critic Value network layers.

@@ -1,6 +1,10 @@
-"""Actor network
-Outputs action distribution
-"""
+# """Actor Policy Network: mapping continuous 6D state observations to Gaussian action distributions.
+#
+# This file defines the ActorNetwork PyTorch module. It evaluates sensory telemetry input states
+# to output Gaussian distribution action parameters (mean and standard deviation) for continuous
+# throttle and steering actuation.
+# """
+
 import torch
 import torch.nn as nn
 from torch.distributions import Normal
@@ -8,7 +12,10 @@ import numpy as np
 from typing import Any, List, Tuple
 
 class ActorNetwork(nn.Module):
+    """Actor Policy Network outputting continuous Gaussian action distributions."""
+
     def __init__(self, obs_dim: int = 6, action_dim: int = 2, hidden_dim: int = 64) -> None:
+        """Initialize backbone MLP layers, actor mean layer, and trainable log_std parameter."""
         super().__init__()
 
         self.backbone = nn.Sequential(
@@ -22,7 +29,6 @@ class ActorNetwork(nn.Module):
         self.mean_layer = nn.Linear(hidden_dim, action_dim)
         self.log_std = nn.Parameter(torch.zeros(action_dim))
 
-
     def forward(self, obs: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Evaluate observation inputs to output normalized controls.
@@ -33,7 +39,7 @@ class ActorNetwork(nn.Module):
             action_mean: Tensor of shape (batch, action_dim)
             action_std:  Tensor of shape (action_dim,) or broadcasted
         """
-         # get hidden layers' features (output of the backbone)
+        # get hidden layers' features (output of the backbone)
         features = self.backbone(obs)
 
         # output of the backbone is the input to actor_mean_head
@@ -43,7 +49,8 @@ class ActorNetwork(nn.Module):
         return action_mean, action_std
     
     def get_action(self, obs_np: np.ndarray) -> Tuple[np.ndarray, torch.Tensor]:
-        """Called by training loop
+        """Sample action for environment step during interaction/rollout.
+        Returns (action_np, log_prob) where action_np is clamped to [-1.0, 1.0].
         """
         # Convert to tensor
         obs_tensor = torch.from_numpy(obs_np)
@@ -68,7 +75,7 @@ class ActorNetwork(nn.Module):
     
     def evaluate_actions(self, obs_batch: torch.Tensor, action_batch: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        For On-Policy training (PPO, A2C) actor
+        For On-Policy training (PPO, A2C) actor.
         Used during PPO mini-batch updates: evaluates log_probs, values, and entropy for past trajectory samples.
 
         The reason evaluate_actions takes obs_batch is that there could be many observations for PPO since
@@ -78,8 +85,7 @@ class ActorNetwork(nn.Module):
 
         The vanilla A2CAgent will only have a batch size of 1 since it is 1D TD_error.
         """
-
-         # Call self.forward(obs_batch) -> (mean, std, values)
+        # Call self.forward(obs_batch) -> (mean, std)
         mean, std = self.forward(obs_batch)
 
         # Create dist = Normal(mean, std)
@@ -92,9 +98,3 @@ class ActorNetwork(nn.Module):
         entropy = dist.entropy().sum(dim=-1)
 
         return log_probs, entropy
-
-
-
-
-
-
