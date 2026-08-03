@@ -25,4 +25,4 @@ class CriticNetwork(nn.Module):
 
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
         features = self.backbone(obs)
-        return self.state_value_layer(features)
+        return self.state_value_layer(features) # estimated state value
