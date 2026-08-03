@@ -11,7 +11,7 @@ from typing import List, Callable
 from src.common.backend import CarBackend
 from src.common.sensor import LidarDevice
 from src.common.types import CarTelemetry, CarCommand, LidarScan
-from rl.networks import PolicyNetwork
+from rl.networks.networks import PolicyNetwork
 
 class RLCarController:
     def __init__(self, backend: CarBackend, lidar_dev: LidarDevice, weights_path: str, listeners: List[Callable[[CarTelemetry], None]] = None) -> None:

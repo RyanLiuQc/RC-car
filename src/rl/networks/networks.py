@@ -1,9 +1,11 @@
-# """PyTorch neural network architectures: Actor Policy and Critic Value Networks in a single class.
-#
-# This file defines the neural network building blocks (PolicyNetwork)
-# that map continuous 6D observation states to control actions (throttle and steering)
-# and evaluate state values for Actor-Critic algorithms like PPO and SAC.
-# """
+"""
+### Transfered to 2 different classes for actor and critic ###
+PyTorch neural network architectures: Actor Policy and Critic Value Networks in a single class.
+
+This file defines the neural network building blocks (PolicyNetwork)
+that map continuous 6D observation states to control actions (throttle and steering)
+and evaluate state values for Actor-Critic algorithms like PPO and SAC.
+"""
 
 import torch
 import torch.nn as nn
@@ -124,6 +126,13 @@ class PolicyNetwork(nn.Module):
         For Actor
         For On-Policy training (PPO, A2C)
         Used during PPO mini-batch updates: evaluates log_probs, values, and entropy for past trajectory samples.
+
+        The reason evaluate_actions takes obs_batch is that there could be many observations for PPO since
+        PPO evaluates action from multidimensional TD error (A_gae: generalized advantage estimation) 
+        so it needs many steps with no_grad and no loss computation 
+        to collect data before computing loss based on A_gae.
+
+        The vanilla A2CAgent will only have a batch size of 1 since it is 1D TD_error.
         """
         # Call self.forward(obs_batch) -> (mean, std, values)
         mean, std, state_values = self.forward(obs_batch)
@@ -137,9 +146,13 @@ class PolicyNetwork(nn.Module):
         # Compute entropy = dist.entropy().sum(dim=-1)
         entropy = dist.entropy().sum(dim=-1)
 
-        # Return (log_probs, values.squeeze(-1), entropy)
-        return log_probs, state_values.squeeze(-1), entropy
+        # Return (log_probs, state_values.squeeze(-1), entropy)
+        # squeeze state_values to match actor and critic tensors
+        return log_probs, state_values.squeeze(-1), entropy 
 
+
+    def load_weights(self, path: str):
+        pass
 
 # class ValueNetwork(nn.Module):
 #     """Critic Value Network estimating state baseline values V(s)."""
