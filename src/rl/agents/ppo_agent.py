@@ -7,7 +7,9 @@
 
 import numpy as np
 from src.rl.base_agent import BaseAgent
-from src.rl.networks import PolicyNetwork, ValueNetwork
+from rl.networks.actor import ActorNetwork
+from rl.networks.critic import CriticNetwork
+
 
 class PPOAgent(BaseAgent):
     def __init__(self, obs_dim: int = 6, action_dim: int = 2, lr: float = 3e-4) -> None:

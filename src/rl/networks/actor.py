@@ -1,8 +1,8 @@
 # """Actor Policy Network: mapping continuous 6D state observations to Gaussian action distributions.
 #
-# This file defines the ActorNetwork PyTorch module. It evaluates sensory telemetry input states
-# to output Gaussian distribution action parameters (mean and standard deviation) for continuous
-# throttle and steering actuation.
+# This file defines the ActorNetwork PyTorch module. It owns the Probability Math. 
+# It evaluates sensory telemetry input states to output Gaussian distribution action parameters
+# (mean and standard deviation) for continuous throttle and steering actuation.
 # """
 
 import torch
@@ -48,8 +48,9 @@ class ActorNetwork(nn.Module):
 
         return action_mean, action_std
     
-    def get_action(self, obs_np: np.ndarray) -> Tuple[np.ndarray, torch.Tensor]:
+    def get_action(self, obs_np: np.ndarray, deterministic: bool = False) -> Tuple[np.ndarray, torch.Tensor]:
         """Sample action for environment step during interaction/rollout.
+        If deterministic=True, returns action_mean directly without Gaussian noise sampling.
         Returns (action_np, log_prob) where action_np is clamped to [-1.0, 1.0].
         """
         # Convert to tensor
@@ -60,7 +61,13 @@ class ActorNetwork(nn.Module):
 
         # sample from normal distribution
         dist = Normal(action_mean, action_std)
-        action = dist.sample()
+
+        if deterministic:
+            # Set action to mean 
+            action = action_mean
+        else:
+            # Sample from the distribution
+            action = dist.sample()
 
         # Compute log_prob
         # sum both actions' probability (log throttle_prob and log steering prob)
@@ -69,7 +76,7 @@ class ActorNetwork(nn.Module):
 
         # Clip action tensor to [-1.0, 1.0] and convert to numpy array
         clipped_action = torch.clamp(action, -1.0, 1.0)
-        action_np = clipped_action.numpy()
+        action_np = clipped_action.detach().numpy()
 
         return action_np, log_prob
     
