@@ -21,7 +21,7 @@ class SACAgent(BaseAgent):
         # TODO: Forward pass through SAC actor network. Returning zeros for stub.
         return np.zeros(self.action_dim, dtype=np.float32)
 
-    def train_step(self, buffer: dict) -> dict:
+    def train_step(self, trajectory_buffer: dict) -> dict:
         """Perform SAC soft Q-learning update step over mini-batch."""
         # TODO: Implement soft Bellman backup and entropy minimization updates.
         return {}

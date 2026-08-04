@@ -14,6 +14,7 @@ from src.common.sensor import LidarDevice
 from src.common.types import CarTelemetry, CarCommand, LidarScan
 from src.rl.base_agent import BaseAgent
 from src.rl.agents import * # RandomAgent, A2CAgent, PPOAgent, SACAgent
+from src.environment.track import Track
 
 class RLCarController:
     def __init__(
@@ -22,12 +23,14 @@ class RLCarController:
             lidar_dev: LidarDevice, 
             weights_path: str, 
             listeners: List[Callable[[CarTelemetry], None]] = None,
-            agent: BaseAgent = RandomAgent()
+            agent: BaseAgent = RandomAgent(),
+            track: Track = Track()
                 ) -> None:
         
         self.backend: CarBackend = backend
         self.lidar_dev: LidarDevice = lidar_dev
         self.listeners: List[Callable[[CarTelemetry], None]] = list(listeners or [])
+        self.track = track
         
         # Instantiate and load trained weights into the policy network
         self.policy: BaseAgent = agent
@@ -40,12 +43,21 @@ class RLCarController:
         step backend, and notify telemetry listeners.
         """
         telemetry: CarTelemetry = self.backend.telemetry()
+        frenet = self.track.cartesian_to_frenet(telemetry.x, telemetry.y, telemetry.heading_deg)
         
         # 1. Generate Lidar scan polymorphically
         scan: LidarScan = self.lidar_dev.read_scan()
         
-        # 2. Assemble observation state [speed, lidar_left, lidar_center, lidar_right]
-        observation: List[float] = [telemetry.speed_mps] + scan.ranges_m
+        # 2. Assemble 6D normalized observation state [speed, d, heading_err, lidar_r, lidar_c, lidar_l]
+        half_width = self.track.track_width / 2.0
+        observation: List[float] = [
+            telemetry.speed_mps / 5.0,
+            frenet.d / half_width,
+            frenet.heading_error_deg / 180.0,
+            scan.ranges_m[0] / 5.0,
+            scan.ranges_m[1] / 5.0,
+            scan.ranges_m[2] / 5.0
+        ]
         
         # 3. Query policy network
         obs_np = np.array(observation, dtype=np.float32)

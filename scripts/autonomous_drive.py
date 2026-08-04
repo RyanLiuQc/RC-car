@@ -17,7 +17,7 @@ from src.perception.lidar_sim import LidarSimulator
 from src.environment.obstacles import ObstacleMap
 from src.environment.track import Track
 from src.tools.visualizer import TrackVisualizer
-from src.rl.agents.random_agent import RandomAgent
+from src.rl.agents import *
 
 def main() -> None:
     """Run autonomous control loop visualizing a RandomAgent driving on track."""
@@ -32,7 +32,7 @@ def main() -> None:
     lidar_device = LidarSimulator(obstacle_map=obs_map, backend=car, track=track, num_rays=3, max_range_m=5.0)
 
     # 2. Instantiate TrackVisualizer dashboard
-    visualizer = TrackVisualizer(track=track, title="Autonomous Driving Simulator - Random Agent Baseline")
+    visualizer = TrackVisualizer(track=track, title="Autonomous Driving Simulator - Agent Baseline")
 
     # 3. Create telemetry observer callback to update visualizer frame on each tick
     def update_visualizer(telemetry):
@@ -41,18 +41,18 @@ def main() -> None:
         visualizer.update(telemetry=telemetry, scan=scan, frenet=frenet)
 
     # 4. Instantiate RandomAgent policy and RLCarController
-    agent = RandomAgent(action_dim=2)
+    agent = A2CAgent(action_dim=2)
     controller = RLCarController(
         backend=car,
         lidar_dev=lidar_device,
-        weights_path="",
+        weights_path="models/a2c_policy_2.pth",
         listeners=[update_visualizer],
         agent=agent
     )
 
     print("Running drive loop... (Close window or wait for steps to complete)")
     dt = 0.05
-    steps = 300
+    steps = 1000
 
     for step in range(steps):
         # Step RL controller tick (queries policy, dispatches command, updates visualizer)
