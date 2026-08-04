@@ -1,7 +1,7 @@
 # """RL Training Execution Script: command-line entrypoint for training policies.
 #
 # This script instantiates the Gymnasium environment (RCCarEnv), parses command-line
-# arguments (--algo RANDOM/PPO/SAC, --timesteps, --visualize), configures render modes,
+# arguments (--algo RANDOM/PPO/SAC/A2C, --timesteps, --visualize), configures render modes,
 # and runs the policy training loop.
 # """
 
@@ -25,6 +25,8 @@ def parse_args():
     )
     parser.add_argument("--timesteps", type=int, default=1000, help="Total training timesteps")
     parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
+    parser.add_argument("--path", type=str, help="Weight's path")
+
     return parser.parse_args()
 
 def main():
@@ -47,7 +49,7 @@ def main():
         weights_path = "models/sac_policy.pth"
     elif args.algo == "A2C":
         agent = A2CAgent(obs_dim=6, action_dim=2, actor_lr=1e-4, critic_lr=3e-4)
-        weights_path = "models/a2c_policy_2.pth"
+        weights_path = "models/a2c_policy_3.pth"
     else:
         raise ValueError(f"Unknown algorithm: {args.algo}")
 
@@ -107,7 +109,8 @@ def main():
         obs = next_obs
 
     # save weights
-    agent.save(weights_path)
+    #agent.save(weights_path)
+    agent.save(args.path)
 
     
     

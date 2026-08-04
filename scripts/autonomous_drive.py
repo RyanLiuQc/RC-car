@@ -21,7 +21,7 @@ from src.rl.agents import *
 
 def main() -> None:
     """Run autonomous control loop visualizing a RandomAgent driving on track."""
-    print("Initializing Autonomous Driving Simulation (RandomAgent)...")
+    print("Initializing Autonomous Driving Simulation...")
 
     # 1. Instantiate Track, Physics Car Backend, and Lidar Sensor Simulator
     track = Track(track_name="default_oval", track_width=1.6)
@@ -45,7 +45,7 @@ def main() -> None:
     controller = RLCarController(
         backend=car,
         lidar_dev=lidar_device,
-        weights_path="models/a2c_policy_2.pth",
+        weights_path="models/a2c_policy_new_reward.pth",
         listeners=[update_visualizer],
         agent=agent
     )
