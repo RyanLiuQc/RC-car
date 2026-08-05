@@ -22,7 +22,7 @@ class A2CAgent(BaseAgent):
             actor_lr: float = 1e-4, 
             critic_lr: float = 3e-4, 
             gamma: float = 0.99, 
-            entropy_coef: float = 0.01) -> None:
+            entropy_coef: float = 0.1) -> None:
         """Initialize ActorNetwork, CriticNetwork, Adam optimizers, and discount factor gamma."""
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
@@ -93,7 +93,7 @@ class A2CAgent(BaseAgent):
         # compute advantage (in this case: 1D Temporal Difference Error)
         # if crash (terminated) after action is taken, then ignore next_state value, put it to 0
         target_state_value = reward_tensor + (self.gamma*next_state_value)*(1.0-terminated_tensor)
-        A_t = (target_state_value - state_value).detach() # do not compute gradient for this
+        A_t = (target_state_value - state_value).squeeze(-1).detach() # do not compute gradient for this
         # since it is not part of what we want to optimize. We want to optimize log prob (for action)
 
         # Evaluate new_log_probs and entropy using self.actor.evaluate_actions(obs, action).

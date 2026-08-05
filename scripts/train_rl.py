@@ -110,7 +110,7 @@ def main():
 
     # save weights
     #agent.save(weights_path)
-    agent.save(args.path)
+    agent.save(args.path or weights_path)
 
     
     

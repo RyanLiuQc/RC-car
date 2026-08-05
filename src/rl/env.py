@@ -72,6 +72,8 @@ class RCCarEnv(gym.Env):
         self.current_step = 0
         super().reset(seed=seed)
 
+        self.rewards.reset()
+
         # Reset car position to start line (0,0) and zero speed
         self.car.t = 0.0
         self.car.x = 0.0
@@ -123,10 +125,13 @@ class RCCarEnv(gym.Env):
         throttle = action[0]
         steering = action[1]
 
+        # Set step time
+        dt = 0.05
+
         #  Issue CarCommand to self.car and call self.car.update(dt=0.05)
         command = CarCommand(throttle=throttle, steering=steering)
         self.car.send_command(command)
-        self.car.update(dt=0.05)
+        self.car.update(dt=dt)
 
         #  Query frenet = self.track.cartesian_to_frenet(...)
         telemetry: CarTelemetry = self.car.telemetry()
@@ -148,7 +153,7 @@ class RCCarEnv(gym.Env):
         terminated = self._check_crash(telemetry, frenet)
 
         #  Compute reward = self.rewards.compute_reward(telemetry, frenet)
-        reward = self.rewards.compute_reward(telemetry=telemetry, frenet_state=frenet, crashed=terminated)
+        reward = self.rewards.compute_reward(telemetry=telemetry, frenet_state=frenet, crashed=terminated, dt=dt)
 
 
         #  If self.render_mode == "human", trigger rendering visualization
