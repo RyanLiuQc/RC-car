@@ -33,38 +33,17 @@ class RewardCalculator:
         if crashed:
             return -100
         
-        # get reward if target velocity ONLY IF lateral dev is small
-        speed_reward = max(0.0,(1.0 - abs(telemetry.speed_mps - self.target_speed)/self.target_speed))
+        # Normalized velocity progress along centerline [0, 1]
+        progress_reward = telemetry.speed_mps/self.target_speed * math.cos(math.radians(frenet_state.heading_error_deg))
+        progress_reward = max(0.0, progress_reward)
 
-        # cos(heading_error) (speed_reward * aligment)
-        velocity_reward =  max(0.0, speed_reward * math.cos(math.radians(frenet_state.heading_error_deg)))
+        # Centering penalty (Gaussian decay from centerline)
+        centering_factor = math.exp(-(frenet_state.d/self.std) ** 2)
 
-        # clamp to prevent less negative rewarding when heading_err>90 deg when d is small
-        # Exponential lateral dev penalty scales to eliminate wall hugging that linear penalty couldn't
-        vel_and_lateral_penalty = max(0.0, velocity_reward * math.e**(-(frenet_state.d/self.std)**2))
+        # TODO: integrate previous action as in the state of the 
+        # Steering rate penalty to prevent high-frequency oscillations ("jerk")
+        # steering_jerk_penalty = 0.05 * ((action[1] - prev_action[1]) ** 2)
 
-        # Compute progress rate per step:
-        delta_s = max(0.0, frenet_state.s - self.prev_s)
-        progress_reward = delta_s / dt  # m/s along centerline
-        # Store current s for next step:
-        self.prev_s = frenet_state.s
-
-        return  vel_and_lateral_penalty + progress_reward
+        total_reward = (0.5 * progress_reward * centering_factor) + (0.5 * centering_factor) # - steering_jerk_penalty
         
-        # # Calculate speed_reward (penalize difference between target and actual speed)
-        # speed_reward = max(0.0, 1.0 - abs(telemetry.speed_mps - self.target_speed))
-        # # adding directionality to the speed reward
-        # # velocity_reward = max(-1.0, (1.0 - abs(telemetry.speed_mps - self.target_speed))*math.cos(frenet_state.heading_error_deg))
-
-        # # Calculate lateral_penalty (penalize large d)
-        # lateral_penalty = 0.5 * abs(frenet_state.d)
-
-        # # Calculate heading_penalty = 0.01 * abs(frenet_state.heading_error_deg)
-        # heading_penalty = 0.01 * abs(frenet_state.heading_error_deg)
-
-        # # Return total reward = speed_reward - lateral_penalty - heading_penalty
-        # reward = speed_reward - lateral_penalty - heading_penalty
-
-        # return reward
-        
-        
+        return total_reward

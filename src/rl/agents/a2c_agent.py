@@ -3,6 +3,11 @@
 # This file defines A2CAgent inheriting from BaseAgent. It uses separate ActorNetwork and CriticNetwork
 # instances to select continuous actions, estimate baseline state values V(s), and update policy weights
 # using 1-step or multi-step Temporal Difference (TD) advantage estimates.
+#
+# General rule of RL: Max
+# input obs -> NN with weights -> output: action
+# Therefore: state does NOT depends on NN weights, but policy depends on them 
+# since policy is probability distribution of an action IS defined by weights.
 # """
 
 import numpy as np
