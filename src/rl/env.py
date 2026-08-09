@@ -153,7 +153,12 @@ class RCCarEnv(gym.Env):
         terminated = self._check_crash(telemetry, frenet)
 
         #  Compute reward = self.rewards.compute_reward(telemetry, frenet)
-        reward = self.rewards.compute_reward(telemetry=telemetry, frenet_state=frenet, crashed=terminated, dt=dt)
+        reward = self.rewards.compute_reward(
+            telemetry=telemetry, 
+            frenet_state=frenet, 
+            action_np=action, 
+            crashed=terminated, 
+            dt=dt)
 
 
         #  If self.render_mode == "human", trigger rendering visualization
