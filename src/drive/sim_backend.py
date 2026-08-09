@@ -23,7 +23,7 @@ class SimulatedCar(CarBackend):
         self.t: float = 0.0
         self.x: float = 0.0
         self.y: float = 0.0
-        self.heading: float = 0.0       # Radians
+        self.heading: float = 0.0       # Radians for kinematics calculation
         self.speed: float = 0.0         # m/s
         self.steering: float = 0.0      # Radians
         
@@ -79,8 +79,6 @@ class SimulatedCar(CarBackend):
 
     def telemetry(self) -> CarTelemetry:
         """Construct and return the current simulated telemetry snapshot."""
-        # TODO: Construct a real LidarScan using simulator raycasting data
-        mock_scan = LidarScan(time_s=self.t, angles_deg=[-30.0, 0.0, 30.0], ranges_m=[5.0, 5.0, 5.0])
         return CarTelemetry(
             time_s=self.t,
             mode=self.mode,
@@ -88,8 +86,8 @@ class SimulatedCar(CarBackend):
             heading_deg=math.degrees(self.heading),
             x=self.x,
             y=self.y,
-            steering_angle_deg=math.degrees(self.steering),
+            steering_angle_deg=math.degrees(self.steering), # in DEGREES
             battery_pct=self.battery,
-            lidar_scan=mock_scan,
-            crashed=False
+            lidar_scan=None,    # unused. Sensors are seperated from car physics
+            crashed=False       # unused
         )

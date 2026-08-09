@@ -13,11 +13,26 @@ class Track:
     def __init__(self, track_name: str = "default_oval", track_width: float = 1.6) -> None:
         self.track_name: str = track_name
         # waypoint can eventually store a width value as the 3rd float for more realistic real world sim
-        self.waypoints: List[Tuple[float, float]] = [
-            (0.0, 0.0), (2.0, 0.0), (4.0, 0.0), (5.0, 1.0),
-            (5.0, 3.0), (4.0, 4.0), (2.0, 4.0), (0.0, 4.0),
-            (-1.0, 3.0), (-1.0, 1.0)
-        ] # Centerline coordinate path (x, y) for trajectory tracking and Frenet projection
+        if track_name == "s_curve":
+            self.waypoints = [
+                (0.0, 0.0), (3.0, 0.0), (5.0, 1.0), (5.0, 3.0),
+                (3.0, 4.0), (1.0, 5.0), (1.0, 7.0), (3.0, 8.0),
+                (6.0, 8.0), (8.0, 6.0), (8.0, 2.0), (6.0, -1.0),
+                (3.0, -1.0)
+            ]
+        elif track_name == "figure_eight":
+            self.waypoints = [
+                (0.0, 0.0), (2.0, 1.0), (3.0, 3.0), (2.0, 5.0),
+                (0.0, 6.0), (-2.0, 5.0), (-3.0, 3.0), (-2.0, 1.0),
+                (0.0, 0.0), (2.0, -1.0), (3.0, -3.0), (2.0, -5.0),
+                (0.0, -6.0), (-2.0, -5.0), (-3.0, -3.0), (-2.0, -1.0)
+            ]
+        else: # "default_oval"
+            self.waypoints: List[Tuple[float, float]] = [
+                (0.0, 0.0), (2.0, 0.0), (4.0, 0.0), (5.0, 1.0),
+                (5.0, 3.0), (4.0, 4.0), (2.0, 4.0), (0.0, 4.0),
+                (-1.0, 3.0), (-1.0, 1.0)
+            ] # Centerline coordinate path (x, y) for trajectory tracking and Frenet projection
 
         # Building Wall/curb line segments (x1, y1, x2, y2) for collision checks and Lidar raycasting
         self.track_width = track_width
@@ -89,8 +104,7 @@ class Track:
         Output: index of segmentt, distance, projection_point, scaling factor
         
         """
-        # TODO: make this return more information.
-                # get nearest waypoint index
+        # get nearest waypoint index
         k = self.get_nearest_waypoint_index(x,y)
 
         # get closest segment index to the car
