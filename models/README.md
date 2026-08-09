@@ -8,6 +8,8 @@ This directory contains trained Reinforcement Learning (RL) policy model weights
 
 ### 1.1 `a2c_policy.pth` — Baseline Iteration (First Attempt)
 
+![A2C Baseline Policy - Wall Hugging](../docs/media/a2c_policy_baseline.gif)
+
 * **Algorithm:** Advantage Actor-Critic (A2C, 1-Step TD)
 * **Reward Formulation:** Naive baseline speed incentive combined with linear lateral displacement penalties.
 * **Observed Driving Behavior:**
@@ -17,6 +19,8 @@ This directory contains trained Reinforcement Learning (RL) policy model weights
 ---
 
 ### 1.2 `a2c_policy_redesign_1.pth` — Reward Function Redesign (Iteration 1)
+
+![A2C Redesign 1 - Tight Centering & Steering Jerk](../docs/media/a2c_policy_redesign_1.gif)
 
 * **Algorithm:** Advantage Actor-Critic (A2C, 1-Step TD)
 * **Reward Formulation Changes:**
@@ -34,10 +38,10 @@ This directory contains trained Reinforcement Learning (RL) policy model weights
 
 ## 2. Summary Comparison Matrix
 
-| Model Checkpoint | Primary Reward Feature | Centering ($d \approx 0$) | Control Smoothness | Training Consistency |
-| :--- | :--- | :--- | :--- | :--- |
-| **`a2c_policy.pth`** | Linear speed and boundary penalty | Wall Hugging | Moderate Oscillations | Moderate |
-| **`a2c_policy_redesign_1.pth`** | Gaussian centering and progress coupling | Excellent ($d \approx 0$) | Severe Steering Jerk | Inconsistent / High Variance |
+| Model Checkpoint | Demonstration | Primary Reward Feature | Centering ($d \approx 0$) | Control Smoothness | Training Consistency |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **`a2c_policy.pth`** | ![A2C Baseline](../docs/media/a2c_policy_baseline.gif) | Linear speed and boundary penalty | Wall Hugging | Low Oscillations | Inconsistent |
+| **`a2c_policy_redesign_1.pth`** | ![A2C Redesign 1](../docs/media/a2c_policy_redesign_1.gif) | Gaussian centering and progress coupling | Excellent ($d \approx 0$) | Severe Steering Jerk | Inconsistent / High Variance |
 
 ---
 

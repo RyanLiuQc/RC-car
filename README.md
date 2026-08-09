@@ -26,6 +26,17 @@ By enforcing strict boundaries between physical dynamics, track layout geometry,
 * **Mock-in-the-Loop Simulation**: Includes a pure-Python 2D Kinematic bicycle physics engine and numerical raymarching Lidar simulator for rapid offline unit testing and verification.
 * **Decoupled Observability**: Observability tools like telemetry logging (CSV) and matplotlib dashboards run as subscriber observers to the main control loops, preventing telemetry logging code from interfering with active steering.
 
+## Policy Progression
+
+This section tracks the evolutionary progression of our Reinforcement Learning policies, showcasing empirical driving behaviors across reward function iterations.
+
+| Model Checkpoint | Demonstration | Behavior & Characteristics |
+| :--- | :--- | :--- |
+| **`a2c_policy.pth`**<br>*(Baseline Attempt)* | ![A2C Baseline Policy](docs/media/a2c_policy_baseline.gif) | **Wall-Hugging Behavior:** Navigates track without hard collisions but settles into a sub-optimal equilibrium hugging outer track boundaries rather than maintaining lane center ($d \approx 0$). |
+| **`a2c_policy_redesign_1.pth`**<br>*(Reward Redesign 1)* | ![A2C Redesign 1 Policy](docs/media/a2c_policy_redesign_1.gif) | **Tight Lane Centering & Steering Jerk:** Removed linear progress reward exploitation and introduced Gaussian centering ($\exp(-(d/\sigma)^2)$). Achieves tight centerline tracking ($d \approx 0$), but exhibits high-frequency steering chatter ("jerk") due to un-penalized action rates. |
+
+For detailed analysis, reward engineering observations, and training stability dynamics, see [models/README.md](models/README.md).
+
 ## Repository Structure
 
 The codebase is organized as follows:
