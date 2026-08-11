@@ -99,9 +99,21 @@ When transitioning to Proximal Policy Optimization (PPO, GAE-$\lambda$), several
 
 ---
 
-## 4. Targeted Technical Improvements
+## 4. Multi-Track Zero-Shot Generalization (PPO Attempt 3)
+
+To evaluate whether policy representations learned on `default_oval` transfer to unseen track geometries without additional training, `PPO_policy_update_reward_1.pth` (Attempt 3) was evaluated zero-shot on the `s_curve` track layout.
+
+| Track Layout | Simulation Demonstration | Zero-Shot Transfer Analysis |
+| :--- | :--- | :--- |
+| **`default_oval`** | <img src="../docs/media/ppo_policy_update_reward_1.gif" width="220" /> | **Primary Training Track:** Achieves continuous lap completion with tight centerline tracking ($d \approx 0$) and optimal speed control. |
+| **`s_curve`** | <img src="../docs/media/ppo_policy_update_reward_1_s_curve.gif" width="220" /> | **Zero-Shot Transfer (Chicane):** Successfully navigates reverse curves and continuous chicanes, maintaining smooth steering adjustments without off-track collisions. |
+
+---
+
+## 5. Targeted Technical Improvements
 
 1. **Frame Stacking / Temporal Memory:**
    * Concatenate past observation frames ($K=4$) to form a 24D state representation, allowing policies to infer lateral velocity $\dot{d}$ and yaw acceleration.
 2. **Multi-Track Curriculum Training:**
    * Train policies across randomized track layouts (`default_oval`, `s_curve`, `figure_eight`) to build generalizable trajectory tracking capability.
+

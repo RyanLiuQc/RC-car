@@ -9,6 +9,15 @@ This repository contains a modular, clean, and highly decoupled software platfor
 
 By enforcing strict boundaries between physical dynamics, track layout geometry, sensor perception systems, and control logic, the platform supports rapid prototyping of classical controllers, computer vision pipelines, and Reinforcement Learning policies.
 
+## Policy Generalization Across Track Layouts
+
+Demonstration of our top-performing policy (**PPO Attempt 3**, `PPO_policy_update_reward_1.pth`) evaluated zero-shot across simulation track layouts without retraining:
+
+| `default_oval` Track | `s_curve` Track |
+| :---: | :---: |
+| <img src="docs/media/ppo_policy_update_reward_1.gif" width="280" /> | <img src="docs/media/ppo_policy_update_reward_1_s_curve.gif" width="280" /> |
+| **Default Oval:** Smooth, continuous lap navigation with zero control chatter and tight centerline lock ($d \approx 0$). | **S-Curve:** Successfully navigates reverse curves and continuous chicanes with smooth steering adjustments. |
+
 ## Roadmap
 
 - [x] **Phase 1: Repository Architecture & Contracts Scaffolding**
@@ -125,6 +134,23 @@ Run the unit test suite to verify that packages import correctly and no syntax e
 ```bash
 python3 -m pytest tests/
 ```
+
+### 3. Run Autonomous Driving Inference (`autonomous_drive.py`)
+Run autonomous policy inference with real-time Matplotlib visualization using [scripts/autonomous_drive.py](scripts/autonomous_drive.py):
+
+```bash
+# Run PPO Attempt 3 (top-performing model) on default_oval track
+python scripts/autonomous_drive.py --algo PPO --weights models/PPO_policy_update_reward_1.pth --track default_oval
+
+# Run PPO Attempt 3 zero-shot on s_curve track
+python scripts/autonomous_drive.py --algo PPO --weights models/PPO_policy_update_reward_1.pth --track s_curve
+```
+
+#### Command-Line Arguments:
+* `--algo`: Policy algorithm (`PPO`, `A2C`, `SAC`, or `RANDOM`). Default: `A2C`.
+* `--weights`: Path to trained PyTorch weights checkpoint file (`.pth`).
+* `--track`: Target track layout (`default_oval`, `s_curve`, `figure_eight`). Default: `default_oval`.
+* `--steps`: Maximum simulation steps to execute (default: `1000`).
 
 ## License
 
