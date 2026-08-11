@@ -19,12 +19,12 @@ def parse_args():
     parser.add_argument(
         "--algo", 
         type=str, 
-        default="RANDOM", 
+        default="PPO", 
         choices=["RANDOM", "PPO", "SAC", "A2C"],
         help="Select RL training algorithm (default: RANDOM)"
     )
-    parser.add_argument("--timesteps", type=int, default=1000, help="Total training timesteps")
-    parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
+    parser.add_argument("--timesteps", type=int, default=100000, help="Total training timesteps")
+    # parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
     parser.add_argument("--path", type=str, help="Weight's path")
 
     return parser.parse_args()
@@ -42,7 +42,7 @@ def main():
         agent = RandomAgent(action_dim=2)
         weights_path = "models/random_policy.pth"
     elif args.algo == "PPO":
-        agent = PPOAgent(obs_dim=6, action_dim=2, lr=3e-4)
+        agent = PPOAgent(obs_dim=6, action_dim=2, device="mps")
         weights_path = "models/ppo_policy.pth"
     elif args.algo == "SAC":
         agent = SACAgent(obs_dim=6, action_dim=2, lr=3e-4)
@@ -102,13 +102,8 @@ def main():
             obs, info = env.reset()
             episode_reward = 0.0
 
-            continue
-
- 
-
-
-
-        obs = next_obs
+        else:
+            obs = next_obs
 
     # save weights
     #agent.save(weights_path)
