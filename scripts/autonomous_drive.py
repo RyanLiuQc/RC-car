@@ -116,9 +116,8 @@ def main() -> None:
             print(f"Step {step}: Car drove off-track! Final coordinates: ({telemetry.x:.2f}, {telemetry.y:.2f})")
             break
 
-    print("Autonomous drive simulation complete.")
-    time.sleep(1.0)
-    visualizer.close()
+    print("Autonomous drive simulation complete. (Close window to exit)")
+    visualizer.keep_open()
 
 if __name__ == "__main__":
     main()

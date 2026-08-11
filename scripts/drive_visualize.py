@@ -18,12 +18,12 @@ from src.perception.lidar_sim import LidarSimulator
 from src.tools.visualizer import TrackVisualizer
 from src.common.types import CarCommand
 
-def main() -> None:
+def main(track_name = "default_oval") -> None:
     """Run interactive 2D simulation visualizer demonstration loop."""
     print("Initializing 2D Simulation Visualizer Dashboard...")
     
     # 1. Instantiate Track, Physics Simulator, and Lidar Raycaster
-    track = Track(track_name="default_oval", track_width=1.6)
+    track = Track(track_name=track_name, track_width=1.6)
     obs_map = ObstacleMap()
     car = SimulatedCar(wheelbase=0.25, max_speed=5.0)
     car.connect()
@@ -62,9 +62,9 @@ def main() -> None:
             print(f"Step {step}: Car went off-track! Coordinates: ({telemetry.x:.2f}, {telemetry.y:.2f})")
             break
 
-    print("Simulation drive visualization complete.")
-    time.sleep(1.0)
-    visualizer.close()
+    print("Simulation drive visualization complete. (Close window to exit)")
+    visualizer.keep_open()
 
 if __name__ == "__main__":
-    main()
+    # figure_eight or s_curve or default_oval
+    main(track_name="s_curve")

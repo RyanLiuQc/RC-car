@@ -122,3 +122,9 @@ class TrackVisualizer:
         """Close interactive plot window."""
         plt.ioff()
         plt.close(self.fig)
+
+    def keep_open(self) -> None:
+        """Keep plot window open blocking until manually closed by user."""
+        plt.ioff()
+        plt.show(block=True)
+
