@@ -12,7 +12,7 @@ from src.rl.networks.critic import CriticNetwork
 from src.rl.rollout_buffer import RolloutBuffer
 
 import torch
-import torch.nn import utils
+from torch.nn import utils
 from torch import optim
 import torch.nn.functional as F
 
