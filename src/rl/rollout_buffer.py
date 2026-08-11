@@ -110,7 +110,7 @@ class RolloutBuffer:
             # last gae is basically the accumulated TD from the end to current step
             # ie: exponentially-discounted cumulative sum of 1-step TD errors (delta) 
             # from the end of the trajectory backward to the current step t.
-            
+
             # we avoid monte carlo's high variance 
             # by avoiding learning wrong conclusion from future error with lambda discount 
             # for future rewards.
@@ -129,4 +129,21 @@ class RolloutBuffer:
 
     def get_batches(self, batch_size: int = 64) -> Generator[Dict[str, torch.Tensor], None, None]:
         """Yield randomized PyTorch Tensor mini-batches for SGD optimization epochs."""
-        pass
+        # randomize indices
+        # set of observation with associated advantage, return, 
+        # log_prob will be put will be put in a batch out of 64 batch
+
+        indices = np.arange(self.buffer_size)
+        np.random.shuffle(indices) # shuffle step indices
+
+        for start in range(0, self.buffer_size, batch_size):
+            batch_idx = indices[start: start+batch_size] # slice of random indices
+
+            yield {
+                "obs": torch.as_tensor(self.observations[batch_idx], device=self.device),
+                "action": torch.as_tensor(self.actions[batch_idx], device=self.device),
+                "old_log_probs": torch.as_tensor(self.log_probs[batch_idx], device=self.device), # PPO
+                "advantages": torch.as_tensor(self.advantages[batch_idx], device=self.device), # for PPO loss function
+                "returns": torch.as_tensor(self.returns[batch_idx], device=self.device), # for critic network MSE loss function
+                "values": torch.as_tensor(self.values, device=self.device) # for critic
+            }
