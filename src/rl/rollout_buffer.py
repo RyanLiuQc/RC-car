@@ -145,5 +145,5 @@ class RolloutBuffer:
                 "old_log_probs": torch.as_tensor(self.log_probs[batch_idx], device=self.device), # PPO
                 "advantages": torch.as_tensor(self.advantages[batch_idx], device=self.device), # for PPO loss function
                 "returns": torch.as_tensor(self.returns[batch_idx], device=self.device), # for critic network MSE loss function
-                "values": torch.as_tensor(self.values, device=self.device) # for critic
+                "values": torch.as_tensor(self.values[batch_idx], device=self.device) # for critic
             }
