@@ -24,7 +24,7 @@ def parse_args():
         help="Select RL training algorithm (default: RANDOM)"
     )
     parser.add_argument("--timesteps", type=int, default=100000, help="Total training timesteps")
-    # parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
+    parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
     parser.add_argument("--path", type=str, help="Weight's path")
 
     return parser.parse_args()

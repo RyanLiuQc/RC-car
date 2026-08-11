@@ -79,7 +79,7 @@ class ActorNetwork(nn.Module):
 
         # Clip action tensor to [-1.0, 1.0] and convert to numpy array
         clipped_action = torch.clamp(action, -1.0, 1.0)
-        action_np = clipped_action.detach().numpy()
+        action_np = clipped_action.detach().cpu().numpy().squeeze(0)
 
         return action_np, log_prob
     
