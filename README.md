@@ -32,8 +32,11 @@ This section tracks the evolutionary progression of our Reinforcement Learning p
 
 | Model Checkpoint | Demonstration | Behavior & Characteristics |
 | :--- | :--- | :--- |
-| **`a2c_policy.pth`**<br>*(Baseline Attempt)* | ![A2C Baseline Policy](docs/media/a2c_policy_baseline.gif) | **Wall-Hugging Behavior:** Navigates track without hard collisions but settles into a sub-optimal equilibrium hugging outer track boundaries rather than maintaining lane center ($d \approx 0$). |
-| **`a2c_policy_redesign_1.pth`**<br>*(Reward Redesign 1)* | ![A2C Redesign 1 Policy](docs/media/a2c_policy_redesign_1.gif) | **Tight Lane Centering & Steering Jerk:** Removed linear progress reward exploitation and introduced Gaussian centering ($\exp(-(d/\sigma)^2)$). Achieves tight centerline tracking ($d \approx 0$), but exhibits high-frequency steering chatter ("jerk") due to un-penalized action rates. |
+| **`a2c_policy.pth`**<br>*(A2C Baseline)* | <img src="docs/media/a2c_policy_baseline.gif" width="220" /> | **Wall-Hugging Behavior:** Navigates track without hard collisions but settles into a sub-optimal equilibrium hugging outer track boundaries rather than maintaining lane center ($d \approx 0$). |
+| **`a2c_policy_redesign_1.pth`**<br>*(A2C Redesign 1)* | <img src="docs/media/a2c_policy_redesign_1.gif" width="220" /> | **Tight Lane Centering & Steering Jerk:** Introduced Gaussian centering ($\exp(-(d/\sigma)^2)$). Achieves tight centerline tracking ($d \approx 0$), but exhibits high-frequency steering chatter due to un-penalized action rates in A2C. |
+| **`PPO_policy_exploites...pth`**<br>*(PPO Attempt 1)* | <img src="docs/media/ppo_policy_rotation_exploit.gif" width="220" /> | **Rotation Exploit:** Contained an additive `+ 0.5 * centering_factor` reward term independent of speed. Discovered a reward-farming exploit spinning continuously in place near $d \approx 0$ to collect positive returns without driving forward. |
+| **`PPO_policy_update_reward.pth`**<br>*(PPO Attempt 2)* | <img src="docs/media/ppo_policy_update_reward.gif" width="220" /> | **Centerline Lock & Smoothness Gain:** Removed the additive `+ 0.5 * centering_factor` term, forcing `centering_factor` to act strictly multiplicatively with forward velocity progress. Completely eliminated rotation exploits with major smoothness gains over A2C. |
+| **`PPO_policy_update_reward_1.pth`**<br>*(PPO Attempt 3)* | <img src="docs/media/ppo_policy_update_reward_1.gif" width="220" /> | **Warm-Started Lap Completion:** Built directly on top of Attempt 2 by initializing from its partially trained weights and continuing optimization. Delivers smooth, highly polished lap navigation. |
 
 For detailed analysis, reward engineering observations, and training stability dynamics, see [models/README.md](models/README.md).
 
@@ -45,6 +48,7 @@ The codebase is organized as follows:
 RC-car/
 ├── docs/
 │   └── architecture.md         # Architecture diagrams and telemetry dataflow descriptions
+├── models/                     # Trained RL policy checkpoints (.pth) and progression documentation
 ├── scripts/                    # Runnable user-facing entry points
 │   ├── simulate_car.py         # Scripted simulation run that logs telemetry to CSV
 │   ├── keyboard_drive.py       # Terminal manual key-mapping teleoperation drive cockpit

@@ -124,7 +124,7 @@ class PPOAgent(BaseAgent):
         # since buffer full, compute gaea and optimize
         with torch.no_grad():
             # shape = (1,6)
-            next_obs_tensor = torch.as_tensor(next_obs, dtype=torch.float32, device=self.device).squeeze(0) 
+            next_obs_tensor = torch.as_tensor(next_obs, dtype=torch.float32, device=self.device).unsqueeze(0) 
 
             last_value = self.critic(next_obs_tensor).squeeze(-1).item()
 
@@ -134,7 +134,7 @@ class PPOAgent(BaseAgent):
         self.rollout_buffer.reset()
         return metric
     
-    def _ppo_update(self):
+    def _ppo_update(self) -> dict:
         """Perform SGD updates over rollout mini-batches for K epochs."""
         actor_losses, critic_losses, entropies = [],[],[]
         
@@ -164,14 +164,14 @@ class PPOAgent(BaseAgent):
 
                 critic_loss = F.mse_loss(current_values, rtns_b)
 
-                # optmize
-                self.actor.zero_grad()
+                # optimize
+                self.actor_optimizer.zero_grad()
                 actor_loss.backward()
                 # clip gradient change
                 utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
                 self.actor_optimizer.step()
 
-                self.critic.zero_grad()
+                self.critic_optimizer.zero_grad()
                 critic_loss.backward()
                 utils.clip_grad_norm_(self.critic.parameters(), self.max_grad_norm)
                 self.critic_optimizer.step()
@@ -181,9 +181,9 @@ class PPOAgent(BaseAgent):
                 entropies.append(entropy.mean().item())
 
         return {
-            actor_loss: np.mean(actor_losses),
-            critic_loss: np.mean(critic_losses),
-            entropy: np.mean(entropies)
+            "actor_loss": np.mean(actor_losses),
+            "critic_loss": np.mean(critic_losses),
+            "entropy": np.mean(entropies)
         }
 
 

@@ -55,7 +55,7 @@ class RewardCalculator:
             self.prev_action = action_np.copy()
         else:
             jerk_penalty = 0
-
-        total_reward = (0.5 * progress_reward * centering_factor) + (0.5 * centering_factor) - jerk_penalty
+        # remove + (0.5 * centering_factor) to prevent always turning on itself
+        total_reward = (0.5 * progress_reward * centering_factor) - jerk_penalty
         
         return total_reward

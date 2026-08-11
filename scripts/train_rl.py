@@ -26,6 +26,7 @@ def parse_args():
     parser.add_argument("--timesteps", type=int, default=100000, help="Total training timesteps")
     parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
     parser.add_argument("--path", type=str, help="Weight's path")
+    parser.add_argument("--load-weights", type=str, help="Path to pre-trained model weights file to load before training")
 
     return parser.parse_args()
 
@@ -42,7 +43,7 @@ def main():
         agent = RandomAgent(action_dim=2)
         weights_path = "models/random_policy.pth"
     elif args.algo == "PPO":
-        agent = PPOAgent(obs_dim=6, action_dim=2, device="mps")
+        agent = PPOAgent(obs_dim=6, action_dim=2, device="cpu")
         weights_path = "models/ppo_policy.pth"
     elif args.algo == "SAC":
         agent = SACAgent(obs_dim=6, action_dim=2, lr=3e-4)
@@ -52,6 +53,11 @@ def main():
         weights_path = "models/a2c_policy_3.pth"
     else:
         raise ValueError(f"Unknown algorithm: {args.algo}")
+
+    # Load pre-trained model weights if specified
+    if args.load_weights:
+        print(f"Loading pre-trained weights from: {args.load_weights}")
+        agent.load(args.load_weights)
 
     # Instantiate Track, SimulatedCar, LidarSimulator, and RCCarEnv(..., render_mode=render_mode)
     track = Track()
@@ -91,7 +97,7 @@ def main():
 
         metrics = agent.train_step(trajectory_buffer=trajectory_buffer)
 
-        if step % 500 == 0 and metrics:
+        if (step % 500 == 0 and metrics) or (args.algo == "PPO" and metrics):
             print(f"[Step {step}/{args.timesteps}] Actor Loss: {metrics['actor_loss']:.4f} | Critic Loss: {metrics['critic_loss']:.4f} | Entropy: {metrics['entropy']:.2f}")
 
         if done: 
