@@ -17,7 +17,18 @@ By enforcing strict boundaries between physical dynamics, track layout geometry,
   * Implement the Kinematic 2D bicycle dynamics model.
   * Implement coordinate centerline boundary check queries.
   * Implement numerical raymarching for simulated Lidar range sweeps.
-- [ ] **Phase 3: Controller & Trajectory Tracking (Next)**
+- [x] **Phase 3: Reinforcement Learning & Continuous Policy Control**
+  * Implement Gymnasium environment wrapper (`RCCarEnv`) and Frenet reward calculator (`RewardCalculator`).
+  * Implement Advantage Actor-Critic (`A2CAgent`) baseline with online 1-step TD learning.
+  * Implement `RolloutBuffer` with Generalized Advantage Estimation (`GAE-λ`) and mini-batch SGD.
+  * Implement Proximal Policy Optimization (`PPOAgent`) with clipped surrogate loss and warm-start checkpointing.
+  * Implement Soft Actor-Critic (`SACAgent`) off-policy maximum-entropy actor-critic setup with twin Q-networks.
+  * Implement automated simulation GIF recorder (`scripts/record_models.py`) and model progression tracking.
+- [ ] **Phase 4: Frame Stacking & Multi-Track Curriculum Training (Next)**
+  * Implement 4-frame observation stacking to provide temporal velocity/acceleration state.
+  * Train policies across randomized track layouts (`default_oval`, `s_curve`, `figure_eight`).
+- [ ] **Phase 5: Hardware-in-the-Loop & Physical Deployment**
+  * Deploy trained PPO policy onto physical servo-driven scale RC car chassis.
 
 ## Features
 
@@ -32,8 +43,11 @@ This section tracks the evolutionary progression of our Reinforcement Learning p
 
 | Model Checkpoint | Demonstration | Behavior & Characteristics |
 | :--- | :--- | :--- |
-| **`a2c_policy.pth`**<br>*(Baseline Attempt)* | ![A2C Baseline Policy](docs/media/a2c_policy_baseline.gif) | **Wall-Hugging Behavior:** Navigates track without hard collisions but settles into a sub-optimal equilibrium hugging outer track boundaries rather than maintaining lane center ($d \approx 0$). |
-| **`a2c_policy_redesign_1.pth`**<br>*(Reward Redesign 1)* | ![A2C Redesign 1 Policy](docs/media/a2c_policy_redesign_1.gif) | **Tight Lane Centering & Steering Jerk:** Removed linear progress reward exploitation and introduced Gaussian centering ($\exp(-(d/\sigma)^2)$). Achieves tight centerline tracking ($d \approx 0$), but exhibits high-frequency steering chatter ("jerk") due to un-penalized action rates. |
+| **`a2c_policy.pth`**<br>*(A2C Baseline)* | <img src="docs/media/a2c_policy_baseline.gif" width="220" /> | **Wall-Hugging Behavior:** Navigates track without hard collisions but settles into a sub-optimal equilibrium hugging outer track boundaries rather than maintaining lane center ($d \approx 0$). |
+| **`a2c_policy_redesign_1.pth`**<br>*(A2C Redesign 1)* | <img src="docs/media/a2c_policy_redesign_1.gif" width="220" /> | **Tight Lane Centering & Steering Jerk:** Introduced Gaussian centering ($\exp(-(d/\sigma)^2)$). Achieves tight centerline tracking ($d \approx 0$), but exhibits high-frequency steering chatter due to un-penalized action rates in A2C. |
+| **`PPO_policy_exploites...pth`**<br>*(PPO Attempt 1)* | <img src="docs/media/ppo_policy_rotation_exploit.gif" width="220" /> | **Rotation Exploit:** Contained an additive `+ 0.5 * centering_factor` reward term independent of speed. Discovered a reward-farming exploit spinning continuously in place near $d \approx 0$ to collect positive returns without driving forward. |
+| **`PPO_policy_update_reward.pth`**<br>*(PPO Attempt 2)* | <img src="docs/media/ppo_policy_update_reward.gif" width="220" /> | **Centerline Lock & Smoothness Gain:** Removed the additive `+ 0.5 * centering_factor` term, forcing `centering_factor` to act strictly multiplicatively with forward velocity progress. Completely eliminated rotation exploits with major smoothness gains over A2C. |
+| **`PPO_policy_update_reward_1.pth`**<br>*(PPO Attempt 3)* | <img src="docs/media/ppo_policy_update_reward_1.gif" width="220" /> | **Warm-Started Lap Completion:** Built directly on top of Attempt 2 by initializing from its partially trained weights and continuing optimization. Delivers smooth, highly polished lap navigation. |
 
 For detailed analysis, reward engineering observations, and training stability dynamics, see [models/README.md](models/README.md).
 
@@ -45,6 +59,7 @@ The codebase is organized as follows:
 RC-car/
 ├── docs/
 │   └── architecture.md         # Architecture diagrams and telemetry dataflow descriptions
+├── models/                     # Trained RL policy checkpoints (.pth) and progression documentation
 ├── scripts/                    # Runnable user-facing entry points
 │   ├── simulate_car.py         # Scripted simulation run that logs telemetry to CSV
 │   ├── keyboard_drive.py       # Terminal manual key-mapping teleoperation drive cockpit

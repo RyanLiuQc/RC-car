@@ -48,13 +48,16 @@ class ActorNetwork(nn.Module):
 
         return action_mean, action_std
     
-    def get_action(self, obs_np: np.ndarray, deterministic: bool = False) -> Tuple[np.ndarray, torch.Tensor]:
+    def get_action(self, obs_tensor: torch.Tensor, deterministic: bool = False) -> Tuple[np.ndarray, torch.Tensor]:
         """Sample action for environment step during interaction/rollout.
         If deterministic=True, returns action_mean directly without Gaussian noise sampling.
         Returns (action_np, log_prob) where action_np is clamped to [-1.0, 1.0].
+
+        *** Agent classes handle obs_np's conversion to tensor
         """
-        # Convert to tensor
-        obs_tensor = torch.from_numpy(obs_np)
+        # Ensure 2D batch dimension (1, obs_dim) if a 1D single observation is passed
+        if obs_tensor.ndim == 1:
+            obs_tensor = obs_tensor.unsqueeze(0)
 
         # single forward pass to get mean and std
         action_mean, action_std = self.forward(obs_tensor)
@@ -76,7 +79,7 @@ class ActorNetwork(nn.Module):
 
         # Clip action tensor to [-1.0, 1.0] and convert to numpy array
         clipped_action = torch.clamp(action, -1.0, 1.0)
-        action_np = clipped_action.detach().numpy()
+        action_np = clipped_action.detach().cpu().numpy().squeeze(0)
 
         return action_np, log_prob
     

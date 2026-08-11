@@ -19,13 +19,14 @@ def parse_args():
     parser.add_argument(
         "--algo", 
         type=str, 
-        default="RANDOM", 
+        default="PPO", 
         choices=["RANDOM", "PPO", "SAC", "A2C"],
         help="Select RL training algorithm (default: RANDOM)"
     )
-    parser.add_argument("--timesteps", type=int, default=1000, help="Total training timesteps")
+    parser.add_argument("--timesteps", type=int, default=100000, help="Total training timesteps")
     parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
     parser.add_argument("--path", type=str, help="Weight's path")
+    parser.add_argument("--load-weights", type=str, help="Path to pre-trained model weights file to load before training")
 
     return parser.parse_args()
 
@@ -42,7 +43,7 @@ def main():
         agent = RandomAgent(action_dim=2)
         weights_path = "models/random_policy.pth"
     elif args.algo == "PPO":
-        agent = PPOAgent(obs_dim=6, action_dim=2, lr=3e-4)
+        agent = PPOAgent(obs_dim=6, action_dim=2, device="cpu")
         weights_path = "models/ppo_policy.pth"
     elif args.algo == "SAC":
         agent = SACAgent(obs_dim=6, action_dim=2, lr=3e-4)
@@ -52,6 +53,11 @@ def main():
         weights_path = "models/a2c_policy_3.pth"
     else:
         raise ValueError(f"Unknown algorithm: {args.algo}")
+
+    # Load pre-trained model weights if specified
+    if args.load_weights:
+        print(f"Loading pre-trained weights from: {args.load_weights}")
+        agent.load(args.load_weights)
 
     # Instantiate Track, SimulatedCar, LidarSimulator, and RCCarEnv(..., render_mode=render_mode)
     track = Track()
@@ -73,23 +79,25 @@ def main():
 
         # step the environment
         next_obs, reward, terminated, truncated, info = env.step(action)
-        
+
+        done = terminated or truncated
+        episode_reward += reward
+
         # Build trajectory buffer dict for agent update
         trajectory_buffer: dict = {
             "obs": obs,
             "action": action,
             "reward": reward,
             "next_obs": next_obs, # after action was taken
-            "terminated": terminated # if next_obs hits obstacle or wall
+            "terminated": terminated, # if next_obs hits obstacle or wall, sets next_value to 0 (reset positiona and state value)
+            "done": done # for cutoff gae
+            # truncated: bootstrap next_value = critic(next_obs) (it's still alive, so estimate its future value).
         }
-
-        done = terminated or truncated
-        episode_reward += reward
 
 
         metrics = agent.train_step(trajectory_buffer=trajectory_buffer)
 
-        if step % 500 == 0 and metrics:
+        if (step % 500 == 0 and metrics) or (args.algo == "PPO" and metrics):
             print(f"[Step {step}/{args.timesteps}] Actor Loss: {metrics['actor_loss']:.4f} | Critic Loss: {metrics['critic_loss']:.4f} | Entropy: {metrics['entropy']:.2f}")
 
         if done: 
@@ -100,13 +108,8 @@ def main():
             obs, info = env.reset()
             episode_reward = 0.0
 
-            continue
-
- 
-
-
-
-        obs = next_obs
+        else:
+            obs = next_obs
 
     # save weights
     #agent.save(weights_path)

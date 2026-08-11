@@ -7,6 +7,7 @@
 
 from src.common.types import CarTelemetry, FrenetState
 import math
+import numpy as np
 
 class RewardCalculator:
     def __init__(self, target_speed: float = 1.5, half_track_width: float = 0.8) -> None:
@@ -15,15 +16,16 @@ class RewardCalculator:
         # Standard deviation set to 30% of half-width (0.24m)
         self.std = 0.3 * half_track_width
 
-        self.prev_s = 0
+        self.prev_action = np.zeros(2, dtype=np.float32)
 
     def reset(self) -> None:
-        self.prev_s = 0.0
+        self.prev_action = np.zeros(2, dtype=np.float32)
 
-    def compute_reward(
+    def compute_reward( # usually input = obs, reward, next_obs
             self, 
             telemetry: CarTelemetry, 
             frenet_state: FrenetState,
+            action_np: np.ndarray = None,
             dt: float = 0.05,
             crashed: bool = False) -> float:
         """
@@ -40,10 +42,20 @@ class RewardCalculator:
         # Centering penalty (Gaussian decay from centerline)
         centering_factor = math.exp(-(frenet_state.d/self.std) ** 2)
 
-        # TODO: integrate previous action as in the state of the 
-        # Steering rate penalty to prevent high-frequency oscillations ("jerk")
-        # steering_jerk_penalty = 0.05 * ((action[1] - prev_action[1]) ** 2)
 
-        total_reward = (0.5 * progress_reward * centering_factor) + (0.5 * centering_factor) # - steering_jerk_penalty
+        # Steering rate penalty to prevent high-frequency oscillations ("jerk")
+        if action_np is not None:   
+            # Penalize squared changes (high penalty for sharp/abrupt snaps)
+            delta_throttle = (action_np[0] - self.prev_action[0])**2
+            delta_steering = (action_np[1] - self.prev_action[1])**2 
+
+            jerk_penalty = 0.05 * delta_steering + 0.1 * delta_throttle
+
+            # Update prev_action memory for next step
+            self.prev_action = action_np.copy()
+        else:
+            jerk_penalty = 0
+        # remove + (0.5 * centering_factor) to prevent always turning on itself
+        total_reward = (0.5 * progress_reward * centering_factor) - jerk_penalty
         
         return total_reward
