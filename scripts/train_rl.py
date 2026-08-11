@@ -73,18 +73,20 @@ def main():
 
         # step the environment
         next_obs, reward, terminated, truncated, info = env.step(action)
-        
+
+        done = terminated or truncated
+        episode_reward += reward
+
         # Build trajectory buffer dict for agent update
         trajectory_buffer: dict = {
             "obs": obs,
             "action": action,
             "reward": reward,
             "next_obs": next_obs, # after action was taken
-            "terminated": terminated # if next_obs hits obstacle or wall
+            "terminated": terminated, # if next_obs hits obstacle or wall, sets next_value to 0 (reset positiona and state value)
+            "done": done # for cutoff gae
+            # truncated: bootstrap next_value = critic(next_obs) (it's still alive, so estimate its future value).
         }
-
-        done = terminated or truncated
-        episode_reward += reward
 
 
         metrics = agent.train_step(trajectory_buffer=trajectory_buffer)

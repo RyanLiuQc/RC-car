@@ -141,7 +141,7 @@ class RolloutBuffer:
 
             yield {
                 "obs": torch.as_tensor(self.observations[batch_idx], device=self.device),
-                "action": torch.as_tensor(self.actions[batch_idx], device=self.device),
+                "actions": torch.as_tensor(self.actions[batch_idx], device=self.device),
                 "old_log_probs": torch.as_tensor(self.log_probs[batch_idx], device=self.device), # PPO
                 "advantages": torch.as_tensor(self.advantages[batch_idx], device=self.device), # for PPO loss function
                 "returns": torch.as_tensor(self.returns[batch_idx], device=self.device), # for critic network MSE loss function

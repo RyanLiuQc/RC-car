@@ -27,7 +27,9 @@ class A2CAgent(BaseAgent):
             actor_lr: float = 1e-4, 
             critic_lr: float = 3e-4, 
             gamma: float = 0.99, 
-            entropy_coef: float = 0.1) -> None:
+            entropy_coef: float = 0.1,
+            device = "cpu"
+            ) -> None:
         """Initialize ActorNetwork, CriticNetwork, Adam optimizers, and discount factor gamma."""
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
@@ -43,12 +45,17 @@ class A2CAgent(BaseAgent):
 
         self.entropy_coef = entropy_coef
 
+        self.device = torch.device("mps") if device == "mps" and torch.backends.mps.is_available() else torch.device(device)
+
+
     def select_action(self, obs: np.ndarray, deterministic: bool = False) -> np.ndarray:
         """
         Select continuous action [throttle, steering] for environment step.
         Returns clipped numpy array of shape (2,).
         """
-        action_np, _ = self.actor.get_action(obs, deterministic=deterministic)
+        obs_tensor = torch.as_tensor(obs, dtype=torch.float32, device=self.device)
+        with torch.no_grad():
+            action_np, _ = self.actor.get_action(obs_tensor, deterministic=deterministic)
         return action_np
 
     def train_step(self, trajectory_buffer: dict) -> dict:
