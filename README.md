@@ -17,7 +17,18 @@ By enforcing strict boundaries between physical dynamics, track layout geometry,
   * Implement the Kinematic 2D bicycle dynamics model.
   * Implement coordinate centerline boundary check queries.
   * Implement numerical raymarching for simulated Lidar range sweeps.
-- [ ] **Phase 3: Controller & Trajectory Tracking (Next)**
+- [x] **Phase 3: Reinforcement Learning & Continuous Policy Control**
+  * Implement Gymnasium environment wrapper (`RCCarEnv`) and Frenet reward calculator (`RewardCalculator`).
+  * Implement Advantage Actor-Critic (`A2CAgent`) baseline with online 1-step TD learning.
+  * Implement `RolloutBuffer` with Generalized Advantage Estimation (`GAE-λ`) and mini-batch SGD.
+  * Implement Proximal Policy Optimization (`PPOAgent`) with clipped surrogate loss and warm-start checkpointing.
+  * Implement Soft Actor-Critic (`SACAgent`) off-policy maximum-entropy actor-critic setup with twin Q-networks.
+  * Implement automated simulation GIF recorder (`scripts/record_models.py`) and model progression tracking.
+- [ ] **Phase 4: Frame Stacking & Multi-Track Curriculum Training (Next)**
+  * Implement 4-frame observation stacking to provide temporal velocity/acceleration state.
+  * Train policies across randomized track layouts (`default_oval`, `s_curve`, `figure_eight`).
+- [ ] **Phase 5: Hardware-in-the-Loop & Physical Deployment**
+  * Deploy trained PPO policy onto physical servo-driven scale RC car chassis.
 
 ## Features
 
