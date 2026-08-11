@@ -62,56 +62,74 @@ For detailed analysis, reward engineering observations, and training stability d
 
 ## Repository Structure
 
-The codebase is organized as follows:
+The codebase is organized as follows (*note: scaffolded modules contain interface signatures and contracts that will be implemented gradually as physical deployment progresses*):
 
 ```text
 RC-car/
-├── docs/
-│   └── architecture.md         # Architecture diagrams and telemetry dataflow descriptions
-├── models/                     # Trained RL policy checkpoints (.pth) and progression documentation
-├── scripts/                    # Runnable user-facing entry points
-│   ├── simulate_car.py         # Scripted simulation run that logs telemetry to CSV
-│   ├── keyboard_drive.py       # Terminal manual key-mapping teleoperation drive cockpit
-│   ├── drive_visualize.py      # Real-time Matplotlib visualization dashboard
-│   └── autonomous_drive.py     # Main loop executing computer vision or policy self-driving
+├── docs/                       # Architectural diagrams and demonstration media
+│   ├── architecture.md         # Dataflow architecture and telemetry specifications
+│   └── media/                  # Animated policy simulation GIFs
+├── models/                     # Trained RL policy checkpoints (.pth) and progression log
+│   └── README.md               # Empirical model progression log and comparison matrix
+├── scripts/                    # User-facing CLI entry points
+│   ├── autonomous_drive.py     # Main autonomous policy and vision navigation runner
+│   ├── drive_visualize.py      # Real-time Matplotlib visualizer dashboard
+│   ├── keyboard_drive.py       # Terminal keyboard teleoperation cockpit
+│   ├── record_models.py        # Automated policy simulation GIF recording pipeline
+│   ├── simulate_car.py         # Scripted physics simulation runner with CSV logging
+│   └── train_rl.py             # RL policy training entry point (A2C, PPO, SAC)
 │
 ├── src/                        # Core library source code
-│   ├── common/                 # Contracts, DTOs, and abstract base classes (no dependencies)
+│   ├── common/                 # Contracts, DTOs, and abstract base classes
 │   │   ├── backend.py          # Abstract CarBackend interface contract
 │   │   ├── sensor.py           # Abstract LidarDevice sensor contract
 │   │   └── types.py            # Common data structures (CarTelemetry, CarCommand, FrenetState)
 │   │
-│   ├── drive/                  # Guidance, Navigation, and Control
-│   │   ├── controller.py       # High-level trajectory planning commands
-│   │   ├── rl_controller.py    # Policy inference command controller
-│   │   ├── sim_backend.py      # Kinematic 2D bicycle dynamics simulator
-│   │   └── collision_avoid.py  # Proximity emergency braking safety controller
+│   ├── drive/                  # Guidance, Navigation, and Control (GNC)
+│   │   ├── collision_avoid.py  # Emergency proximity braking safety controller
+│   │   ├── controller.py       # High-level trajectory planning controller
+│   │   ├── rl_controller.py    # RL policy inference vehicle controller
+│   │   └── sim_backend.py      # 2D Kinematic bicycle dynamics simulator
 │   │
 │   ├── environment/            # Map configurations and boundary definitions
-│   │   ├── track.py            # Centerline waypoints and boundary limits
-│   │   └── obstacles.py        # Database of static and dynamic obstacles
+│   │   ├── obstacles.py        # Database of static/dynamic obstacle objects
+│   │   └── track.py            # Track geometry waypoints, Frenet projection, and walls
 │   │
 │   ├── perception/             # Sensor processing and computer vision
 │   │   ├── lane_detector.py    # OpenCV lane detection offset estimators
-│   │   ├── lidar_scan.py       # Noise filters and clustering for scanner returns
-│   │   ├── lidar_sim.py        # Raymarching simulator calculating virtual ranges
-│   │   └── lidar_driver.py     # Serial port drivers for physical laser sweeps
+│   │   ├── lidar_driver.py     # Serial driver interface for physical laser scanners
+│   │   ├── lidar_scan.py       # Lidar sweep point cloud filters and clustering
+│   │   └── lidar_sim.py        # Raymarching simulator calculating virtual ranges
 │   │
-│   ├── rl/                     # Reinforcement Learning setups
-│   │   ├── env.py              # Gymnasium environment wrapping car and sensors
-│   │   ├── agent.py            # Neural network policy architectures
-│   │   └── rewards.py          # Reward shaping calculators
+│   ├── rl/                     # Reinforcement Learning framework
+│   │   ├── agents/             # RL agent policy implementations
+│   │   │   ├── a2c_agent.py    # Advantage Actor-Critic (A2C) agent
+│   │   │   ├── ppo_agent.py    # Proximal Policy Optimization (PPO) agent
+│   │   │   ├── sac_agent.py    # Soft Actor-Critic (SAC) agent
+│   │   │   └── random_agent.py # Random baseline agent
+│   │   ├── networks/           # PyTorch neural network policy architectures
+│   │   │   ├── actor.py        # Gaussian actor policy network
+│   │   │   ├── critic.py       # Value function critic network
+│   │   │   └── networks.py     # Shared MLP backbone architectures
+│   │   ├── base_agent.py       # Abstract BaseAgent policy contract
+│   │   ├── env.py              # Gymnasium environment wrapping car physics and sensors
+│   │   ├── replay_buffer.py    # Off-policy experience replay buffer
+│   │   ├── rewards.py          # Frenet reward shaping calculator
+│   │   └── rollout_buffer.py   # Fixed-capacity GAE rollout trajectory buffer
 │   │
 │   ├── state/                  # Aggregators and health estimators
 │   │   └── car_state.py        # Statistics tracker (odometry, battery check)
 │   │
-│   └── tools/                  # Observability and teleoperation
-│       ├── telemetry_logger.py # CSV telemetry log writer observer
-│       └── keyboard_teleop.py  # keystroke-to-actuator command mapper
+│   └── tools/                  # Observability and teleoperation tools
+│       ├── keyboard_teleop.py  # Keystroke-to-actuator command mapper
+│       ├── telemetry_logger.py # CSV telemetry writer subscriber observer
+│       └── visualizer.py       # Real-time Matplotlib track visualizer
 │
-└── tests/                      # Fast, offline test suite
-    ├── test_mvp_car.py         # Verifies basic kinematics and safety in sim
-    └── test_perception.py      # Verifies lane line parsing math
+└── tests/                      # Unit test suite
+    ├── test_mvp_car.py         # Kinematics and safety unit tests
+    ├── test_perception.py      # Perception and lane parsing unit tests
+    ├── test_sim_backend.py     # Physics engine dynamics unit tests
+    └── test_track.py           # Track boundary and Frenet projection unit tests
 ```
 
 ## Setup and Getting Started
