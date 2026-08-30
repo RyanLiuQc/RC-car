@@ -8,12 +8,21 @@
 import numpy as np
 from src.rl.base_agent import BaseAgent
 from src.rl.replay_buffer import ReplayBuffer
+from src.rl.networks import ActorNetwork
 
 class SACAgent(BaseAgent):
     def __init__(self, obs_dim: int = 6, action_dim: int = 2, lr: float = 3e-4) -> None:
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
         self.lr: float = lr
+
+        self.Q1 = ActorNetwork(obs_dim, action_dim)
+        self.Q2 = ActorNetwork(obs_dim, action_dim)
+
+        self.replay_buffer = ReplayBuffer(capacity=100000, obs_dim=obs_dim, action_dim=action_dim)
+
+        
+
         # TODO: Initialize actor network, twin Q-networks, and target networks.
 
     def select_action(self, obs: np.ndarray, deterministic: bool = False) -> np.ndarray:
