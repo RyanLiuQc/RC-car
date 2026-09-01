@@ -53,6 +53,8 @@ class SACAgent(BaseAgent):
 
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=actor_lr)
 
+        # since q1 and q2 weights come from different branches of the computational graph, 
+        # they won't affect each other during backward computation.
         self.Q_optimizer = torch.optim.Adam(list(self.Q1.parameters())+list(self.Q2.parameters()), lr=critic_lr)
         
 
@@ -70,12 +72,27 @@ class SACAgent(BaseAgent):
     def train_step(self, trajectory_buffer: dict) -> dict:
         """Perform SAC soft Q-learning update step over mini-batch."""
         # TODO: Implement soft Bellman backup and entropy minimization updates.
+        
+
         return {}
 
     def save(self, filepath: str) -> None:
         """Save SAC actor and twin critic weights to disk."""
-        pass
+        torch.save({
+            'actor_state_dict': self.actor.state_dict(),
+            'q1_state_dict': self.Q1.state_dict(),
+            'q2_state_dict': self.Q2.state_dict(),
+            'actor_optimizer': self.actor_optimizer.state_dict(),
+            'critic_optimizer': self.Q_optimizer.state_dict()
+        },
+        filepath
+        )
 
     def load(self, filepath: str) -> None:
         """Load SAC actor and twin critic weights from disk."""
-        pass
+        checkpoint = torch.load(filepath)
+        self.actor.load_state_dict(checkpoint['actor_state_dict'])
+        self.Q1.load_state_dict(checkpoint['q1_state_dict'])
+        self.Q2.load_state_dict(checkpoint['q2_state_dict'])
+        self.actor_optimizer.load_state_dict(checkpoint['actor_optimizer'])
+        self.Q_optimizer.load_state_dict(checkpoint['critic_optimizer'])
