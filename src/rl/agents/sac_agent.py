@@ -24,6 +24,11 @@ class SACAgent(BaseAgent):
             actor_lr: float = 1e-4, 
             critic_lr: float = 3e-4,
             buffer_capacity: int = 100000,
+            # n_epochs: int = 10, # we don't go through ALL element of dataset... 
+            # instead, we just pick randomly sample 32 batches of 64-step (batch_size) (still 2048 steps processed)
+
+            batch_size: int = 64,
+            entropy_coef: float = 0.01,
             ) -> None:
 
         self.device = torch.device(
@@ -31,6 +36,9 @@ class SACAgent(BaseAgent):
             else "mps" if torch.backends.mps.is_available() 
             else "cpu"
         )
+        self.n_epochs = n_epochs
+        self.batch_size = batch_size
+        self.entropy_coef = entropy_coef
 
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
@@ -56,6 +64,8 @@ class SACAgent(BaseAgent):
         # since q1 and q2 weights come from different branches of the computational graph, 
         # they won't affect each other during backward computation.
         self.Q_optimizer = torch.optim.Adam(list(self.Q1.parameters())+list(self.Q2.parameters()), lr=critic_lr)
+
+        self._count = 0 # keep track of training steps done
         
 
     def select_action(self, obs: np.ndarray, deterministic: bool = False) -> np.ndarray:
@@ -70,9 +80,41 @@ class SACAgent(BaseAgent):
         return action.numpy()
 
     def train_step(self, trajectory_buffer: dict) -> dict:
-        """Perform SAC soft Q-learning update step over mini-batch."""
+        """Perform SAC soft Q-learning update step over mini-batch.
+        Input: trajectory_buffer
+        Output: metrics = {
+            "actor_loss": np.mean(actor_losses),
+            "critic_loss": np.mean(critic_losses),
+            "entropy": np.mean(entropies)
+        }
+        """
         # TODO: Implement soft Bellman backup and entropy minimization updates.
+        # RECALL
+        # trajectory_buffer: dict = {
+        #     "obs": obs,
+        #     "action": action,
+        #     "reward": reward,
+        #     "next_obs": next_obs, 
+        #     "terminated": terminated,
+        #     "done": done # where done = terminated or truncated
+        # }
+        self._count += 1
+
+        # retrieve data
+        obs: np.ndarray = trajectory_buffer["obs"] 
+        action: np.ndarray = trajectory_buffer["action"]
+        reward: float = trajectory_buffer["reward"]
+        next_obs: np.ndarray = trajectory_buffer["next_obs"]
+        terminated: bool = trajectory_buffer["done"] # just a choice of terminology. I want to treat any episode ending as a termination in the replay_buffer
+
+        # add to replay buffer
+        self.replay_buffer.add(obs,action,reward,next_obs,terminated)
+
         
+        if self._count < 5000:
+            return {}
+
+        # sample and update at every step above 5000 (add step argument to train_step)
 
         return {}
 

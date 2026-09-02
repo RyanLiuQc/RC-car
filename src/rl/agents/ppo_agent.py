@@ -98,6 +98,7 @@ class PPOAgent(BaseAgent):
         #     "reward": reward,
         #     "next_obs": next_obs, 
         #     "terminated": terminated
+        #     "done": done # where done = terminated or truncated
         # }
 
         obs = trajectory_buffer["obs"]
