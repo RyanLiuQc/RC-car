@@ -58,7 +58,7 @@ class A2CAgent(BaseAgent):
             action_np, _ = self.actor.get_action(obs_tensor, deterministic=deterministic)
         return action_np
 
-    def train_step(self, trajectory_buffer: dict) -> dict:
+    def train_step(self, trajectory_buffer: dict, step: int) -> dict:
         """
         Perform 1-step or multi-step Advantage Actor-Critic (A2C) gradient update.
         

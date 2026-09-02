@@ -65,7 +65,7 @@ class SACAgent(BaseAgent):
         # they won't affect each other during backward computation.
         self.Q_optimizer = torch.optim.Adam(list(self.Q1.parameters())+list(self.Q2.parameters()), lr=critic_lr)
 
-        self._count = 0 # keep track of training steps done
+        # self._count = 0 # keep track of training steps done
         
 
     def select_action(self, obs: np.ndarray, deterministic: bool = False) -> np.ndarray:
@@ -79,7 +79,7 @@ class SACAgent(BaseAgent):
 
         return action.numpy()
 
-    def train_step(self, trajectory_buffer: dict) -> dict:
+    def train_step(self, trajectory_buffer: dict, step: int) -> dict:
         """Perform SAC soft Q-learning update step over mini-batch.
         Input: trajectory_buffer
         Output: metrics = {
@@ -111,7 +111,7 @@ class SACAgent(BaseAgent):
         self.replay_buffer.add(obs,action,reward,next_obs,terminated)
 
         
-        if self._count < 5000:
+        if step < 5000:
             return {}
 
         # sample and update at every step above 5000 (add step argument to train_step)

@@ -95,7 +95,7 @@ def main():
         }
 
 
-        metrics = agent.train_step(trajectory_buffer=trajectory_buffer)
+        metrics = agent.train_step(trajectory_buffer=trajectory_buffer, step=step)
 
         if (step % 500 == 0 and metrics) or (args.algo == "PPO" and metrics):
             print(f"[Step {step}/{args.timesteps}] Actor Loss: {metrics['actor_loss']:.4f} | Critic Loss: {metrics['critic_loss']:.4f} | Entropy: {metrics['entropy']:.2f}")

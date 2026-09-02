@@ -15,7 +15,7 @@ class BaseAgent(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def train_step(self, trajectory_buffer: dict) -> dict:
+    def train_step(self, trajectory_buffer: dict, step: int) -> dict:
         """Perform policy update step using collected experience."""
         raise NotImplementedError
 

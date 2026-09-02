@@ -84,7 +84,7 @@ class PPOAgent(BaseAgent):
 
         return action_np
 
-    def train_step(self, trajectory_buffer: dict) -> dict:
+    def train_step(self, trajectory_buffer: dict, step: int) -> dict:
         """Perform PPO clipped policy gradient update step.
         While buffer is not full, gather data by adding to buffer.
         Once buffer reach capacity:

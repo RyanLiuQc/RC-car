@@ -16,7 +16,7 @@ class RandomAgent(BaseAgent):
         """Sample random continuous action between [-1.0, 1.0]."""
         return np.random.uniform(low=-1.0, high=1.0, size=(self.action_dim,)).astype(np.float32)
 
-    def train_step(self, trajectory_buffer: dict) -> dict:
+    def train_step(self, trajectory_buffer: dict, step: int) -> dict:
         """No training step required for random agent."""
         return {}
 
