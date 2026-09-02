@@ -98,7 +98,8 @@ class SACAgent(BaseAgent):
         #     "terminated": terminated,
         #     "done": done # where done = terminated or truncated
         # }
-        self._count += 1
+        
+        # self._count += 1
 
         # retrieve data
         obs: np.ndarray = trajectory_buffer["obs"] 
