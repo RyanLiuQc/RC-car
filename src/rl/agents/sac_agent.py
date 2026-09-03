@@ -79,7 +79,7 @@ class SACAgent(BaseAgent):
 
         action, log_prob_a = self.actor.sample_action(obs_tensor)
 
-        return action.numpy()
+        return action.detach().cpu().numpy().squeeze(0)
 
     def train_step(self, trajectory_buffer: dict, step: int) -> dict:
         """Perform SAC soft Q-learning update step over mini-batch.
@@ -121,9 +121,9 @@ class SACAgent(BaseAgent):
         sample = self.replay_buffer.sample()
         obs_batch = torch.from_numpy(sample["observations"]).to(self.device)
         action_batch = torch.from_numpy(sample["actions"]).to(self.device)
-        reward_batch = torch.from_numpy(sample["rewards"]).unsqueeze(-1).to(self.device)
+        reward_batch = torch.from_numpy(sample["rewards"]).to(self.device)
         next_obs_batch = torch.from_numpy(sample["next_obs"]).to(self.device)
-        done_batch = torch.from_numpy(sample["terminated"]).unsqueeze(-1).to(self.device)
+        done_batch = torch.from_numpy(sample["terminated"]).to(self.device)
 
         assert list(next_obs_batch.shape) == [self.batch_size, self.obs_dim], f"next_obs_batch.shape should be {[self.batch_size, self.obs_dim]}, not {list(next_obs_batch.shape)}"
         assert list(obs_batch.shape) == [self.batch_size, self.obs_dim], f"obs_batch.shape should be {[self.batch_size, self.obs_dim]}, not {list(obs_batch.shape)}"
@@ -179,7 +179,7 @@ class SACAgent(BaseAgent):
         return {
             "actor_loss": loss_actor.item(),
             "critic_loss": loss_q.item(),
-            "entropy": np.mean(pred_log_prob_action_batch)
+            "entropy": pred_log_prob_action_batch.detach().mean().item()
         }
 
     def save(self, filepath: str) -> None:

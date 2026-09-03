@@ -3,6 +3,7 @@
 # This script instantiates the Gymnasium environment (RCCarEnv), parses command-line
 # arguments (--algo RANDOM/PPO/SAC/A2C, --timesteps, --visualize), configures render modes,
 # and runs the policy training loop.
+# Ex:  python -m scripts.train_rl --algo SAC
 # """
 
 import argparse
