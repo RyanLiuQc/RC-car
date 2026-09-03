@@ -75,7 +75,7 @@ class SACAgent(BaseAgent):
         obs_tensor = torch.as_tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0) # (1,6)
         if deterministic:
             # maybe need to detach (no grad to make this work before converting to numpy)
-            return self.actor(obs)[0].numpy()
+            return self.actor(obs_tensor)[0].detach().cpu().numpy().squeeze(0)
 
         action, log_prob_a = self.actor.sample_action(obs_tensor)
 

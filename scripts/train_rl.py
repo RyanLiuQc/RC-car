@@ -112,6 +112,10 @@ def main():
         else:
             obs = next_obs
 
+        if step % 20000 == 0:
+            pass
+            # agent.save()
+
     # save weights
     #agent.save(weights_path)
     agent.save(args.path or weights_path)
