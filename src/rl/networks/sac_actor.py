@@ -8,6 +8,8 @@ from torch.distributions import Normal
 
 class SACActor(nn.Module):
     def __init__(self, obs_dim: int = 6, action_dim: int = 2, hidden_dim: int = 64) -> None:
+        super().__init__()
+
         self.net = nn.Sequential(
             nn.Linear(obs_dim, hidden_dim),
             nn.ReLU(),
@@ -20,11 +22,11 @@ class SACActor(nn.Module):
             # cannot squeeze early since randomness is introduced later. you need to squeeze action +- epsilon*std
             # nn.Tanh() # squeeze throttle and steering in -1 and 1
 
-        self.std = nn.Linear(hidden_dim, 1)
+        self.log_std = nn.Linear(hidden_dim, 1)
 
     def forward(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.net(obs)
-        return self.action_mean(x), self.std(x)
+        return self.action_mean(x), self.log_std(x)
 
     def sample_action(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
@@ -33,7 +35,8 @@ class SACActor(nn.Module):
             action: squashed action in [-1, 1]
             log_prob: corrected log probability of the squashed action
         """
-        action_mean, std = self.forward(obs)
+        action_mean, log_std = self(obs)
+        std = torch.exp(log_std)
 
         epsilon = Normal(0,1).sample(action_mean.shape).to(action_mean.device)
 

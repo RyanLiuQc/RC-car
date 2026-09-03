@@ -23,27 +23,29 @@ class SACAgent(BaseAgent):
             action_dim: int = 2, 
             actor_lr: float = 1e-4, 
             critic_lr: float = 3e-4,
+            gamma: float = 0.99,
             buffer_capacity: int = 100000,
             # n_epochs: int = 10, # we don't go through ALL element of dataset... 
             # instead, we just pick randomly sample 32 batches of 64-step (batch_size) (still 2048 steps processed)
-
             batch_size: int = 64,
             entropy_coef: float = 0.01,
+            start_step: int = 5000, # number of steps done to collect data without training before starting to optimize at every step
             ) -> None:
-
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() 
             else "mps" if torch.backends.mps.is_available() 
             else "cpu"
         )
-        self.n_epochs = n_epochs
+        # self.n_epochs = n_epochs
         self.batch_size = batch_size
         self.entropy_coef = entropy_coef
+        self.start_step = start_step
 
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
         self.actor_lr: float = actor_lr
         self.critic_lr: float = critic_lr
+        self.gamma = gamma
 
         self.Q1 = SACCritic(obs_dim, action_dim).to(self.device)
         self.Q2 = SACCritic(obs_dim, action_dim).to(self.device)
@@ -55,7 +57,7 @@ class SACAgent(BaseAgent):
         self.Q1_target.load_state_dict(self.Q1.state_dict())
         self.Q2_target.load_state_dict(self.Q2.state_dict())
 
-        self.actor = SACActor(obs_dim=obs_dim, action_dim=action_dim)
+        self.actor = SACActor(obs_dim=obs_dim, action_dim=action_dim).to(self.device)
 
         self.replay_buffer = ReplayBuffer(capacity=buffer_capacity, obs_dim=obs_dim, action_dim=action_dim)
 
@@ -75,7 +77,7 @@ class SACAgent(BaseAgent):
             # maybe need to detach (no grad to make this work before converting to numpy)
             return self.actor(obs)[0].numpy()
 
-        action, log_std = self.actor.sample_action(obs_tensor)
+        action, log_prob_a = self.actor.sample_action(obs_tensor)
 
         return action.numpy()
 
@@ -98,7 +100,7 @@ class SACAgent(BaseAgent):
         #     "terminated": terminated,
         #     "done": done # where done = terminated or truncated
         # }
-        
+
         # self._count += 1
 
         # retrieve data
@@ -112,12 +114,73 @@ class SACAgent(BaseAgent):
         self.replay_buffer.add(obs,action,reward,next_obs,terminated)
 
         
-        if step < 5000:
+        if step < self.start_step:
+            
             return {}
 
-        # sample and update at every step above 5000 (add step argument to train_step)
+        sample = self.replay_buffer.sample()
+        obs_batch = torch.from_numpy(sample["observations"]).to(self.device)
+        action_batch = torch.from_numpy(sample["actions"]).to(self.device)
+        reward_batch = torch.from_numpy(sample["rewards"]).unsqueeze(-1).to(self.device)
+        next_obs_batch = torch.from_numpy(sample["next_obs"]).to(self.device)
+        done_batch = torch.from_numpy(sample["terminated"]).unsqueeze(-1).to(self.device)
 
-        return {}
+        assert list(next_obs_batch.shape) == [self.batch_size, self.obs_dim], f"next_obs_batch.shape should be {[self.batch_size, self.obs_dim]}, not {list(next_obs_batch.shape)}"
+        assert list(obs_batch.shape) == [self.batch_size, self.obs_dim], f"obs_batch.shape should be {[self.batch_size, self.obs_dim]}, not {list(obs_batch.shape)}"
+        assert list(action_batch.shape) == [self.batch_size, self.action_dim], f"action_batch.shape should be {[self.batch_size, self.action_dim]}, not {list[action_batch.shape]}"
+        assert list(reward_batch.shape) == [self.batch_size, 1], f"reward_batch.shape should be {[self.batch_size, 1]}, not {reward_batch.shape}"
+        assert list(done_batch.shape) == [self.batch_size, 1], f"done_batch.shape should be {[self.batch_size, 1]}, not {done_batch.shape}"
+
+
+        # sample and update at every step above 5000 (add step argument to train_step)
+        with torch.no_grad():
+            # -------------- for Q update -----------------
+            # get next_action with current policy
+            next_action_batch, log_prob_next_action_batch = self.actor.sample_action(next_obs_batch)
+            
+            # compute Q(next_state, next_action)
+            next_Q1 = self.Q1_target(next_obs_batch, next_action_batch)
+            next_Q2 = self.Q2_target(next_obs_batch, next_action_batch)
+
+            # compute target
+            Q_targets = (reward_batch + (1.0-done_batch.float())*self.gamma * (torch.min(next_Q1, next_Q2) - self.entropy_coef * log_prob_next_action_batch))
+
+            # -------------- for policy (actor) update ---------------
+            
+
+        # ---------------- for Q update -------------------
+        # infer Qs
+        Q1_curr = self.Q1(obs_batch, action_batch)
+        Q2_curr = self.Q2(obs_batch, action_batch)
+
+        loss_q1 = ((Q1_curr - Q_targets)**2).mean()
+        loss_q2 = ((Q2_curr - Q_targets)**2).mean()
+
+        loss_q = loss_q1 + loss_q2
+
+        # -------------- for policy update ----------------
+        pred_action_batch, pred_log_prob_action_batch = self.actor.sample_action(obs_batch)
+        with torch.no_grad():
+            Q1_with_action_from_curr_policy = self.Q1(obs_batch, pred_action_batch)
+            Q2_with_action_from_curr_policy = self.Q2(obs_batch, pred_action_batch)
+
+        loss_actor = - (torch.min(Q1_with_action_from_curr_policy, Q2_with_action_from_curr_policy) - self.entropy_coef * pred_log_prob_action_batch).mean()
+        
+
+        self.Q_optimizer.zero_grad()
+        loss_q.backward()
+        self.Q_optimizer.step()
+
+        self.actor_optimizer.zero_grad()
+        loss_actor.backward()
+        self.actor_optimizer.step()
+            
+
+        return {
+            "actor_loss": loss_actor.item(),
+            "critic_loss": loss_q.item(),
+            "entropy": np.mean(pred_log_prob_action_batch)
+        }
 
     def save(self, filepath: str) -> None:
         """Save SAC actor and twin critic weights to disk."""

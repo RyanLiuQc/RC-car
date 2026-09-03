@@ -46,8 +46,8 @@ def main():
         agent = PPOAgent(obs_dim=6, action_dim=2, device="cpu")
         weights_path = "models/ppo_policy.pth"
     elif args.algo == "SAC":
-        agent = SACAgent(obs_dim=6, action_dim=2, lr=3e-4)
-        weights_path = "models/sac_policy.pth"
+        agent = SACAgent(obs_dim=6, action_dim=2)
+        weights_path = "models/sac/sac_policy.pth"
     elif args.algo == "A2C":
         agent = A2CAgent(obs_dim=6, action_dim=2, actor_lr=1e-4, critic_lr=3e-4)
         weights_path = "models/a2c_policy_3.pth"
