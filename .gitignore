@@ -23,3 +23,7 @@ ENV/
 
 # os files
 *.DS_Store
+
+# IDE 
+.vscode/
+

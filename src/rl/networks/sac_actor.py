@@ -35,14 +35,18 @@ class SACActor(nn.Module):
             action: squashed action in [-1, 1]
             log_prob: corrected log probability of the squashed action
         """
+        # not actually action mean since it is not normalized yet.
         action_mean, log_std = self(obs)
         std = torch.exp(log_std)
 
         epsilon = Normal(0,1).sample(action_mean.shape).to(action_mean.device)
 
         # keep action differentiable by seperating action_mean/std and epsilon noise, by reparametrizing
+        # instead of defining epsilong, you can also directly use init a Normal() dist
+        # then use dist.rsample to get reparametrized action
         u = action_mean+epsilon*std
 
+        # action is btw [-1, 1]
         action = torch.tanh(u) # action is no longer gaussian after squashing...
 
         # get log probability of this action
@@ -51,7 +55,7 @@ class SACActor(nn.Module):
         log_prob_u = dist.log_prob(u)
 
         # 1-action**2 == da/du
-        log_prob_a = log_prob_u - dist.log_prob(1-action.pow(2) + 1e-6)
+        log_prob_a = log_prob_u - dist.log_prob(1.0-action.pow(2) + 1e-6)
 
         return action, log_prob_a
     

@@ -72,7 +72,7 @@ class SACAgent(BaseAgent):
 
     def select_action(self, obs: np.ndarray, deterministic: bool = False) -> np.ndarray:
         """Select continuous action using reparameterized PolicyNetwork."""
-        obs_tensor = torch.as_tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0)
+        obs_tensor = torch.as_tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0) # (1,6)
         if deterministic:
             # maybe need to detach (no grad to make this work before converting to numpy)
             return self.actor(obs)[0].numpy()
@@ -145,7 +145,6 @@ class SACAgent(BaseAgent):
             # compute target
             Q_targets = (reward_batch + (1.0-done_batch.float())*self.gamma * (torch.min(next_Q1, next_Q2) - self.entropy_coef * log_prob_next_action_batch))
 
-            # -------------- for policy (actor) update ---------------
             
 
         # ---------------- for Q update -------------------
@@ -160,20 +159,30 @@ class SACAgent(BaseAgent):
 
         # -------------- for policy update ----------------
         pred_action_batch, pred_log_prob_action_batch = self.actor.sample_action(obs_batch)
-        with torch.no_grad():
-            Q1_with_action_from_curr_policy = self.Q1(obs_batch, pred_action_batch)
-            Q2_with_action_from_curr_policy = self.Q2(obs_batch, pred_action_batch)
+
+        # DO NOT torch.no_grad, since action prediction flows 
+        # into input of Q and we need to learn parameters for action too.
+        # draw out the computational graph to visualize
+        # we will not learn parameters for the Q-network here 
+        # since actor_optimizer only tracks self.actor.parameters()
+        # so loss_actor.backward() gradient is computed wrt actor parameters
+        # Q1, Q2 parameters are treated as constants.
+        Q1_with_action_from_curr_policy = self.Q1(obs_batch, pred_action_batch)
+        Q2_with_action_from_curr_policy = self.Q2(obs_batch, pred_action_batch)
 
         loss_actor = - (torch.min(Q1_with_action_from_curr_policy, Q2_with_action_from_curr_policy) - self.entropy_coef * pred_log_prob_action_batch).mean()
-        
+
+        # actor needs to be computed first since it uses current Q-nets
+        # if Q-nets gets updated before actor, we will be flowing back new weights which crash the code
+        self.actor_optimizer.zero_grad()
+        loss_actor.backward()
+        self.actor_optimizer.step()
 
         self.Q_optimizer.zero_grad()
         loss_q.backward()
         self.Q_optimizer.step()
 
-        self.actor_optimizer.zero_grad()
-        loss_actor.backward()
-        self.actor_optimizer.step()
+        
             
 
         return {
