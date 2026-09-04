@@ -22,7 +22,7 @@ class SACActor(nn.Module):
             # cannot squeeze early since randomness is introduced later. you need to squeeze action +- epsilon*std
             # nn.Tanh() # squeeze throttle and steering in -1 and 1
 
-        self.log_std = nn.Linear(hidden_dim, 1)
+        self.log_std = nn.Linear(hidden_dim, 2)
 
     def forward(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.net(obs)
@@ -58,5 +58,3 @@ class SACActor(nn.Module):
         log_prob_a = log_prob_u - dist.log_prob(1.0-action.pow(2) + 1e-6)
 
         return action, log_prob_a
-    
-
