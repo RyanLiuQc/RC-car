@@ -134,7 +134,7 @@ class SACAgent(BaseAgent):
         assert list(obs_batch.shape) == [self.batch_size, self.obs_dim], f"obs_batch.shape should be {[self.batch_size, self.obs_dim]}, not {list(obs_batch.shape)}"
         assert list(action_batch.shape) == [self.batch_size, self.action_dim], f"action_batch.shape should be {[self.batch_size, self.action_dim]}, not {list[action_batch.shape]}"
         assert list(reward_batch.shape) == [self.batch_size, 1], f"reward_batch.shape should be {[self.batch_size, 1]}, not {reward_batch.shape}"
-        assert list(done_batch.shape) == [self.batch_size, 1], f"done_batch.shape should be {[self.batch_size, 1]}, not {done_batch.shape}"
+        assert list(terminated_batch.shape) == [self.batch_size, 1], f"done_batch.shape should be {[self.batch_size, 1]}, not {done_batch.shape}"
 
 
         # sample and update at every step above 5000 (add step argument to train_step)

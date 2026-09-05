@@ -6,6 +6,7 @@
 # Ex:  python -m scripts.train_rl --algo SAC
 # """
 
+import os
 import argparse
 from src.rl.agents import * # RandomAgent, PPOAgent, SACAgent, A2CAgent
 from src.rl.env import RCCarEnv
@@ -26,7 +27,9 @@ def parse_args():
     )
     parser.add_argument("--timesteps", type=int, default=100000, help="Total training timesteps")
     parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
-    parser.add_argument("--path", type=str, help="Weight's path")
+    #parser.add_argument("--path", type=str, help="Weight's path")
+    parser.add_argument("--folder", type=str, help="Weight's folder")
+    parser.add_argument("--filename", type=str, help="weight's folder name without .pth")
     parser.add_argument("--load-weights", type=str, help="Path to pre-trained model weights file to load before training")
 
     return parser.parse_args()
@@ -36,6 +39,10 @@ def main():
     # Save trained policy model weights: model.save("rc_car_ppo_policy")
 
     args = parse_args()
+
+    filename = args.filename or args.algo
+    folder = args.folder or (os.path.join("models", args.algo.lower()))
+
     render_mode = "human" if args.visualize else None
     print(f"Initializing Training Pipeline with Algorithm: {args.algo} ({'Visualized' if args.visualize else 'Headless'} mode)")
 
@@ -75,8 +82,13 @@ def main():
     print(f"Starting Training for {args.timesteps} timesteps...")
 
     for step in range(1, args.timesteps + 1):
-        # select an action using the agent's current policy
-        action = agent.select_action(obs)
+        if type(agent) is SACAgent and step < agent.start_step: # or any other off policy agents.
+            # we don't want to limit first exploratory actions to the untrained policy yet. Training hasn't even started. 
+            # should restrain decision on untrained weights.
+            action = env.action_space.sample()
+        else:
+            # select an action using the agent's current policy
+            action = agent.select_action(obs)
 
         # step the environment
         next_obs, reward, terminated, truncated, info = env.step(action)
@@ -114,11 +126,12 @@ def main():
 
         if step % 20000 == 0:
             pass
-            # agent.save()
+            agent.save(os.path.join(folder, filename + f"_{step}.pth"))
 
     # save weights
     #agent.save(weights_path)
-    agent.save(args.path or weights_path)
+    # agent.save(args.path or weights_path)
+    agent.save(os.path.join(folder, filename + ".pth"))
 
     
     
