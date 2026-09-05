@@ -31,7 +31,11 @@ class ReplayBuffer:
         self.terminated[self.ptr] = terminated
 
         self.ptr = (self.ptr + 1) % self.capacity
-        self.size = min(self.ptr+1, self.capacity)
+        self.size = min(self.size + 1, self.capacity) 
+
+        # if self.size = min(self.ptr + 1, self.capacity) 
+        # Problem at size = capacity - 1, next add will transition ptr = 0 (modulo) -> self.size = 0
+        # and if sample() is called, indices will be chosen from a=self.size=0 -> array = [] empty list to choose from
 
 
     def sample(self, batch_size: int = 64) -> Dict[str, np.ndarray]:
