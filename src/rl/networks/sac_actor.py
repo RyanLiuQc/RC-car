@@ -55,6 +55,7 @@ class SACActor(nn.Module):
         log_prob_u = dist.log_prob(u)
 
         # 1-action**2 == da/du
-        log_prob_a = log_prob_u - dist.log_prob(1.0-action.pow(2) + 1e-6)
+        log_prob_a = log_prob_u - torch.log(1.0-action.pow(2) + 1e-6).sum() 
+        # sum is derived from the jacobian matrix's determinant then taking the log leads to summation.
 
         return action, log_prob_a
