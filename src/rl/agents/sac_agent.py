@@ -41,7 +41,6 @@ class SACAgent(BaseAgent):
         self.entropy_coef = entropy_coef
         self.start_step = start_step
 
-
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
         self.actor_lr: float = actor_lr
