@@ -58,5 +58,8 @@ class SACActor(nn.Module):
         log_prob_a = (log_prob_u - torch.log(1.0-action.pow(2) + 1e-6)).sum(dim=1, keepdim=True) # do not sum over dim=0 (batch_dim) 
         # sum is derived from the jacobian matrix's determinant then taking the log leads to summation.
         # jacobian = (1-action1^2)(1-action2), take log for sum
+        # we also some log_prob_u since prob(u1,u2) == prob(u1)prob(u2) since actions are independnet. 
+        # taking log makes it a sum.
+        # sum everything to reduce log_prob's dimension to (batch,1). also avoid broadcasting consequence
 
         return action, log_prob_a

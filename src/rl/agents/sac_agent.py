@@ -30,7 +30,6 @@ class SACAgent(BaseAgent):
             batch_size: int = 64,
             entropy_coef: float = 0.01,
             start_step: int = 5000, # number of steps done to collect data without training before starting to optimize at every step
-            target_network_update_freq: int = 500
             ) -> None:
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() 
@@ -187,10 +186,8 @@ class SACAgent(BaseAgent):
         loss_q.backward()
         self.Q_optimizer.step()
 
-        if step % self.target_network_update_freq == 0:
-            self.update_target_net(self.Q1, self.Q2, self.Q1_target, self.Q2_target)
-
-        
+        # update slowly at every step
+        self.update_target_net(self.Q1, self.Q2, self.Q1_target, self.Q2_target)
             
 
         return {
@@ -208,7 +205,7 @@ class SACAgent(BaseAgent):
         q2_new_params = Q2.parameters()
 
         # retention rate
-        p = 0.95
+        p = 0.995 # tau = 0.05
 
         # update target parameters (old params)
         for q1_old_param, q2_old_param, q1_new_param, q2_new_param in zip(
