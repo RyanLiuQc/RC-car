@@ -125,12 +125,13 @@ def main():
             obs = next_obs
 
         if step % 20000 == 0:
-            pass
+            os.makedirs(folder, exist_ok=True)
             agent.save(os.path.join(folder, filename + f"_{step}.pth"))
 
     # save weights
     #agent.save(weights_path)
     # agent.save(args.path or weights_path)
+    os.makedirs(folder, exist_ok=True)
     agent.save(os.path.join(folder, filename + ".pth"))
 
     
