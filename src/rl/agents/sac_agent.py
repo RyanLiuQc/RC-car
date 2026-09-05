@@ -77,7 +77,8 @@ class SACAgent(BaseAgent):
         obs_tensor = torch.as_tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0) # (1,6)
         if deterministic:
             # maybe need to detach (no grad to make this work before converting to numpy)
-            return self.actor(obs_tensor)[0].detach().cpu().numpy().squeeze(0)
+            # tanh to squash action btw -1 and 1 like what sample_action() does. actor() only outputs unsquashed.
+            return torch.tanh(self.actor(obs_tensor)[0]).detach().cpu().numpy().squeeze(0)
 
         action, log_prob_a = self.actor.sample_action(obs_tensor)
 
@@ -110,7 +111,9 @@ class SACAgent(BaseAgent):
         action: np.ndarray = trajectory_buffer["action"]
         reward: float = trajectory_buffer["reward"]
         next_obs: np.ndarray = trajectory_buffer["next_obs"]
-        terminated: bool = trajectory_buffer["done"] # just a choice of terminology. I want to treat any episode ending as a termination in the replay_buffer
+        terminated: bool = trajectory_buffer["terminated"] # we should mask ONLY when episode ends
+        # episode ends -> no next step -> no reward
+        # truncated -> previous steps where smooth -> next step could still exist -> reward can exist (we just stopped recording)
 
         # add to replay buffer
         self.replay_buffer.add(obs,action,reward,next_obs,terminated)
@@ -125,7 +128,7 @@ class SACAgent(BaseAgent):
         action_batch = torch.from_numpy(sample["actions"]).to(self.device)
         reward_batch = torch.from_numpy(sample["rewards"]).to(self.device)
         next_obs_batch = torch.from_numpy(sample["next_obs"]).to(self.device)
-        done_batch = torch.from_numpy(sample["terminated"]).to(self.device)
+        terminated_batch = torch.from_numpy(sample["terminated"]).to(self.device)
 
         assert list(next_obs_batch.shape) == [self.batch_size, self.obs_dim], f"next_obs_batch.shape should be {[self.batch_size, self.obs_dim]}, not {list(next_obs_batch.shape)}"
         assert list(obs_batch.shape) == [self.batch_size, self.obs_dim], f"obs_batch.shape should be {[self.batch_size, self.obs_dim]}, not {list(obs_batch.shape)}"
@@ -145,7 +148,7 @@ class SACAgent(BaseAgent):
             next_Q2 = self.Q2_target(next_obs_batch, next_action_batch)
 
             # compute target
-            Q_targets = (reward_batch + (1.0-done_batch.float())*self.gamma * (torch.min(next_Q1, next_Q2) - self.entropy_coef * log_prob_next_action_batch))
+            Q_targets = (reward_batch + (1.0-terminated_batch.float())*self.gamma * (torch.min(next_Q1, next_Q2) - self.entropy_coef * log_prob_next_action_batch))
 
             
 
