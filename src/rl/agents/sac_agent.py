@@ -40,7 +40,7 @@ class SACAgent(BaseAgent):
         self.batch_size = batch_size
         self.entropy_coef = entropy_coef
         self.start_step = start_step
-        self.target_network_update_freq = target_network_update_freq
+
 
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
