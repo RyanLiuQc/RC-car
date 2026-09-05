@@ -37,6 +37,11 @@ class SACActor(nn.Module):
         """
         # not actually action mean since it is not normalized yet.
         action_mean, log_std = self(obs)
+
+        # clamp to prevent extreme values of std before taking exponent.
+        # log < -20 makes std 0
+        # log > 10 makes std explode...
+        log_std = torch.clamp(log_std, min=-20, max=2)
         std = torch.exp(log_std)
 
         epsilon = Normal(0,1).sample(action_mean.shape).to(action_mean.device)
