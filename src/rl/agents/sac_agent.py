@@ -30,6 +30,7 @@ class SACAgent(BaseAgent):
             batch_size: int = 64,
             entropy_coef: float = 0.01,
             start_step: int = 5000, # number of steps done to collect data without training before starting to optimize at every step
+            target_network_update_freq: int = 500
             ) -> None:
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() 
@@ -40,6 +41,7 @@ class SACAgent(BaseAgent):
         self.batch_size = batch_size
         self.entropy_coef = entropy_coef
         self.start_step = start_step
+        self.target_network_update_freq = target_network_update_freq
 
         self.obs_dim: int = obs_dim
         self.action_dim: int = action_dim
@@ -182,6 +184,9 @@ class SACAgent(BaseAgent):
         loss_q.backward()
         self.Q_optimizer.step()
 
+        if step % self.target_network_update_freq == 0:
+            self.update_target_net(self.Q1, self.Q2, self.Q1_target, self.Q2_target)
+
         
             
 
@@ -190,6 +195,33 @@ class SACAgent(BaseAgent):
             "critic_loss": loss_q.item(),
             "entropy": pred_log_prob_action_batch.detach().mean().item()
         }
+
+    def update_target_net(self, Q1: SACCritic, Q2: SACCritic, Q1_target: SACCritic, Q2_target: SACCritic) -> None:
+        """Update target by tau=5% (ie. keep 95% of target param (polyak p retention rate) and move 5% towards curr param)"""
+        q1_old_params = Q1_target.parameters()
+        q2_old_params = Q2_target.parameters()
+
+        q1_new_params = Q1.parameters()
+        q2_new_params = Q2.parameters()
+
+        # retention rate
+        p = 0.95
+
+        # update target parameters (old params)
+        for q1_old_param, q2_old_param, q1_new_param, q2_new_param in zip(
+            q1_old_params,q2_old_params,q1_new_params,q2_new_params
+            ):
+            # modify in-place paramater with copy_() ("_" means modify in-place in pytorch)
+            q1_old_param.data.copy_(
+                p * q1_old_param.data + (1.0 - p) * q1_new_param.data
+            )
+
+            q2_old_param.data.copy_(
+                p * q2_old_param.data + (1.0 - p) * q2_new_param.data
+            )
+
+
+         
 
     def save(self, filepath: str) -> None:
         """Save SAC actor and twin critic weights to disk."""
