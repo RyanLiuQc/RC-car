@@ -139,7 +139,7 @@ During SAC policy training:
    $$y = r + \gamma (1 - d) \left( \min(Q_1^{\text{targ}}(s', a'), Q_2^{\text{targ}}(s', a')) - \alpha \log \pi(a'|s') \right)$$
    Minimizes $\mathcal{L}_Q = \mathbb{E}[(Q_1(s, a) - y)^2] + \mathbb{E}[(Q_2(s, a) - y)^2]$.
 4. **Actor Policy Update**: Maximizes expected Q-value with entropy regularizer via reparameterization trick:
-   $$\mathcal{L}_\pi = -\mathbb{E}_{s \sim \mathcal{D}, a \sim \pi} \left[ \min(Q_1(s, a), Q_2(s, a)) - \alpha \log \pi(a|s) \right]$$
+   \mathcal{L}(\pi) = -\mathbb{E}_{s \sim \mathcal{D}, a \sim \pi} \left[ \min(Q_1(s, a), Q_2(s, a)) - \alpha \log \pi(a|s) \right]
 5. **Polyak Target Tracking**: Continuously updates target critic parameters at every step:
    $$\theta_{\text{target}} \leftarrow 0.995 \cdot \theta_{\text{target}} + 0.005 \cdot \theta_{\text{current}}$$
 6. **Checkpoint Preservation**: Intermediate and final models are saved to `models/sac/version4/*.pth`.
