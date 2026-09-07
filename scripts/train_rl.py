@@ -110,8 +110,20 @@ def main():
 
         metrics = agent.train_step(trajectory_buffer=trajectory_buffer, step=step)
 
-        if (step % 500 == 0 and metrics) and ((args.algo == "PPO" or args.algo == "SAC") and metrics):
-            print(f"[Step {step}/{args.timesteps}] Actor Loss: {metrics['actor_loss']:.4f} | Critic Loss: {metrics['critic_loss']:.4f} | Entropy: {metrics['entropy']:.2f}")
+        if (step % 500 == 0 and metrics): #and ((args.algo == "PPO" or args.algo == "SAC") and metrics):
+            if args.algo == "SAC":
+                print(
+                    f"[Step {step:6d}/{args.timesteps}] "
+                    f"Actor Loss: {metrics.get('actor_loss', 0):.3f} | "
+                    f"Critic Loss: {metrics.get('critic_loss', 0):.3f} | "
+                    f"Q-Mean: {metrics.get('q_val', 0):.2f} (Target: {metrics.get('q_target', 0):.2f}) | "
+                    f"Twin Diff: {metrics.get('q_disagree', 0):.2f} | "
+                    f"Entropy: {metrics.get('entropy', 0):.2f}"
+                )
+            else:
+                print(f"[Step {step}/{args.timesteps}] Actor Loss: {metrics['actor_loss']:.4f} | Critic Loss: {metrics['critic_loss']:.4f} | Entropy: {metrics['entropy']:.2f}")
+            
+            
 
         if done: 
             # update num of episode, reset env, reset episode reward.

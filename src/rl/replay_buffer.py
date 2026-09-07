@@ -9,7 +9,7 @@ import numpy as np
 from typing import Tuple, Dict, Any
 
 class ReplayBuffer:
-    def __init__(self, capacity: int = 100000, obs_dim: int = 6, action_dim: int = 2) -> None:
+    def __init__(self, capacity: int = 50000, obs_dim: int = 6, action_dim: int = 2) -> None:
         self.capacity: int = capacity
         self.ptr: int = 0 # next idx available
         self.size: int = 0

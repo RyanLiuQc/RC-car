@@ -188,11 +188,22 @@ class SACAgent(BaseAgent):
         # update slowly at every step
         self.update_target_net(self.Q1, self.Q2, self.Q1_target, self.Q2_target)
             
+                # Compute twin critic disagreement
+        q_disagree = (Q1_curr - Q2_curr).abs().mean().item()
+
+        # Compute what the policy currently expects to earn from current states
+        policy_q = torch.min(Q1_with_action_from_curr_policy, Q2_with_action_from_curr_policy).mean().item()
 
         return {
             "actor_loss": loss_actor.item(),
             "critic_loss": loss_q.item(),
-            "entropy": pred_log_prob_action_batch.detach().mean().item()
+            "entropy": -pred_log_prob_action_batch.mean().item(),
+            "q_val": min(Q1_curr.mean().item(), Q2_curr.mean().item()),
+            "q_target": Q_targets.mean().item(), # to catch mathematically impossible values
+            "q_disagree": q_disagree,
+            "policy_q": policy_q,
+            "q_min": torch.min(Q1_curr, Q2_curr).min().item(),
+            "q_max": torch.max(Q1_curr, Q2_curr).max().item()
         }
 
     def update_target_net(self, Q1: SACCritic, Q2: SACCritic, Q1_target: SACCritic, Q2_target: SACCritic) -> None:
