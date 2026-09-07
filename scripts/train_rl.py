@@ -3,8 +3,10 @@
 # This script instantiates the Gymnasium environment (RCCarEnv), parses command-line
 # arguments (--algo RANDOM/PPO/SAC/A2C, --timesteps, --visualize), configures render modes,
 # and runs the policy training loop.
+# Ex:  python -m scripts.train_rl --algo SAC
 # """
 
+import os
 import argparse
 from src.rl.agents import * # RandomAgent, PPOAgent, SACAgent, A2CAgent
 from src.rl.env import RCCarEnv
@@ -25,7 +27,9 @@ def parse_args():
     )
     parser.add_argument("--timesteps", type=int, default=100000, help="Total training timesteps")
     parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
-    parser.add_argument("--path", type=str, help="Weight's path")
+    #parser.add_argument("--path", type=str, help="Weight's path")
+    parser.add_argument("--folder", type=str, help="Weight's folder")
+    parser.add_argument("--filename", type=str, help="weight's folder name without .pth")
     parser.add_argument("--load-weights", type=str, help="Path to pre-trained model weights file to load before training")
 
     return parser.parse_args()
@@ -35,6 +39,10 @@ def main():
     # Save trained policy model weights: model.save("rc_car_ppo_policy")
 
     args = parse_args()
+
+    filename = args.filename or args.algo
+    folder = args.folder or (os.path.join("models", args.algo.lower()))
+
     render_mode = "human" if args.visualize else None
     print(f"Initializing Training Pipeline with Algorithm: {args.algo} ({'Visualized' if args.visualize else 'Headless'} mode)")
 
@@ -46,8 +54,8 @@ def main():
         agent = PPOAgent(obs_dim=6, action_dim=2, device="cpu")
         weights_path = "models/ppo_policy.pth"
     elif args.algo == "SAC":
-        agent = SACAgent(obs_dim=6, action_dim=2, lr=3e-4)
-        weights_path = "models/sac_policy.pth"
+        agent = SACAgent(obs_dim=6, action_dim=2)
+        weights_path = "models/sac/sac_policy.pth"
     elif args.algo == "A2C":
         agent = A2CAgent(obs_dim=6, action_dim=2, actor_lr=1e-4, critic_lr=3e-4)
         weights_path = "models/a2c_policy_3.pth"
@@ -74,8 +82,13 @@ def main():
     print(f"Starting Training for {args.timesteps} timesteps...")
 
     for step in range(1, args.timesteps + 1):
-        # select an action using the agent's current policy
-        action = agent.select_action(obs)
+        if type(agent) is SACAgent and step < agent.start_step: # or any other off policy agents.
+            # we don't want to limit first exploratory actions to the untrained policy yet. Training hasn't even started. 
+            # should restrain decision on untrained weights.
+            action = env.action_space.sample()
+        else:
+            # select an action using the agent's current policy
+            action = agent.select_action(obs)
 
         # step the environment
         next_obs, reward, terminated, truncated, info = env.step(action)
@@ -95,10 +108,22 @@ def main():
         }
 
 
-        metrics = agent.train_step(trajectory_buffer=trajectory_buffer)
+        metrics = agent.train_step(trajectory_buffer=trajectory_buffer, step=step)
 
-        if (step % 500 == 0 and metrics) or (args.algo == "PPO" and metrics):
-            print(f"[Step {step}/{args.timesteps}] Actor Loss: {metrics['actor_loss']:.4f} | Critic Loss: {metrics['critic_loss']:.4f} | Entropy: {metrics['entropy']:.2f}")
+        if (step % 500 == 0 and metrics): #and ((args.algo == "PPO" or args.algo == "SAC") and metrics):
+            if args.algo == "SAC":
+                print(
+                    f"[Step {step:6d}/{args.timesteps}] "
+                    f"Actor Loss: {metrics.get('actor_loss', 0):.3f} | "
+                    f"Critic Loss: {metrics.get('critic_loss', 0):.3f} | "
+                    f"Q-Mean: {metrics.get('q_val', 0):.2f} (Target: {metrics.get('q_target', 0):.2f}) | "
+                    f"Twin Diff: {metrics.get('q_disagree', 0):.2f} | "
+                    f"Entropy: {metrics.get('entropy', 0):.2f}"
+                )
+            else:
+                print(f"[Step {step}/{args.timesteps}] Actor Loss: {metrics['actor_loss']:.4f} | Critic Loss: {metrics['critic_loss']:.4f} | Entropy: {metrics['entropy']:.2f}")
+            
+            
 
         if done: 
             # update num of episode, reset env, reset episode reward.
@@ -111,9 +136,15 @@ def main():
         else:
             obs = next_obs
 
+        if step % 20000 == 0:
+            os.makedirs(folder, exist_ok=True)
+            agent.save(os.path.join(folder, filename + f"_{step}.pth"))
+
     # save weights
     #agent.save(weights_path)
-    agent.save(args.path or weights_path)
+    # agent.save(args.path or weights_path)
+    os.makedirs(folder, exist_ok=True)
+    agent.save(os.path.join(folder, filename + ".pth"))
 
     
     

@@ -30,6 +30,8 @@ class RewardCalculator:
             crashed: bool = False) -> float:
         """
         Calculate step-level reward based on speed error, lateral track displacement d, and crash status.
+        
+        Theoretical reward range is: [-100, 50]
         """
         # Penalize crash
         if crashed:

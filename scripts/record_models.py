@@ -18,7 +18,7 @@ from src.perception.lidar_sim import LidarSimulator
 from src.environment.obstacles import ObstacleMap
 from src.environment.track import Track
 from src.tools.visualizer import TrackVisualizer
-from src.rl.agents import A2CAgent, PPOAgent, RandomAgent
+from src.rl.agents import A2CAgent, PPOAgent, RandomAgent, SACAgent
 
 def record_policy(
     algo: str,
@@ -49,6 +49,8 @@ def record_policy(
         agent = PPOAgent(obs_dim=6, action_dim=2)
     elif algo == "RANDOM":
         agent = RandomAgent(action_dim=2)
+    elif algo == "SAC":
+        agent = SACAgent(obs_dim=6, action_dim=2)
     else:
         raise ValueError(f"Unknown algorithm: {algo}")
 
@@ -95,7 +97,7 @@ def record_policy(
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Record RL policy simulation to animated GIF")
-    parser.add_argument("--algo", type=str, default="PPO", choices=["A2C", "PPO", "RANDOM"], help="Policy algorithm")
+    parser.add_argument("--algo", type=str, default="PPO", choices=["A2C", "PPO", "RANDOM", "SAC"], help="Policy algorithm")
     parser.add_argument("--weights", type=str, help="Path to model checkpoint (.pth)")
     parser.add_argument("--output", type=str, help="Output GIF path")
     parser.add_argument("--title", type=str, help="Title overlay for visualization")
@@ -123,6 +125,8 @@ def record_ppo_attempts():
 def main():
     args = parse_args()
     if args.weights:
+        if args.output:
+            os.makedirs(os.path.dirname(args.output), exist_ok=True)
         output_path = args.output or f"docs/media/{os.path.splitext(os.path.basename(args.weights))[0]}.gif"
         title = args.title or f"{args.algo} Simulation ({os.path.basename(args.weights)})"
         record_policy(args.algo, args.weights, output_path, title=title, track_name=args.track, num_steps=args.steps)

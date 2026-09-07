@@ -26,8 +26,8 @@ class RCCarEnv(gym.Env):
             self, car: SimulatedCar, 
             lidar_sim: LidarSimulator, 
             track: Track, 
-            obstacle_map: ObstacleMap = None,
-            render_mode: str = None,
+            obstacle_map: ObstacleMap | None = None,
+            render_mode: str | None = None,
             max_episode_steps: int = 1000
             ) -> None:
         
