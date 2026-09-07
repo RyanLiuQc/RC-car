@@ -10,6 +10,7 @@ from typing import Tuple, Dict, Any
 
 class ReplayBuffer:
     def __init__(self, capacity: int = 50000, obs_dim: int = 6, action_dim: int = 2) -> None:
+        # make capacity lower to remove low quality states/exploration from older steps.
         self.capacity: int = capacity
         self.ptr: int = 0 # next idx available
         self.size: int = 0
