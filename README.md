@@ -3,6 +3,12 @@
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Build Status](https://img.shields.io/badge/tests-passing-brightgreen.svg)](#)
 
+<p align="center">
+  <img src="docs/media/sac/sac_progression_v4.gif" width="480" alt="SAC Policy Progression v4 (20k to 100k steps)" />
+  <br>
+  <em><b>Autonomous Driving Policy Progression:</b> Concurrent multi-agent simulation demonstrating the evolutionary convergence of Soft Actor-Critic (SAC v4) across intermediate checkpoints (20k to 100k steps).</em>
+</p>
+
 ## Overview
 
 This repository contains a modular, clean, and highly decoupled software platform designed for autonomous driving development. It provides a structured foundation that enables a seamless transition between a 2D Kinematic Simulation environment and a physical, servo-driven 1/8 scale RC car chassis. 
@@ -15,8 +21,13 @@ Demonstration of our top-performing policy (**PPO Attempt 3**, `PPO_policy_updat
 
 | `default_oval` Track | `s_curve` Track |
 | :---: | :---: |
-| <img src="docs/media/ppo_policy_update_reward_1.gif" width="280" /> | <img src="docs/media/ppo_policy_update_reward_1_s_curve.gif" width="280" /> |
+| <img src="docs/media/ppo/ppo_policy_update_reward_1.gif" width="280" /> | <img src="docs/media/ppo/ppo_policy_update_reward_1_s_curve.gif" width="280" /> |
 | **Default Oval:** Smooth, continuous lap navigation with zero control chatter and tight centerline lock ($d \approx 0$). | **S-Curve:** Successfully navigates reverse curves and continuous chicanes with smooth steering adjustments. |
+
+Note that SAC version 4 also generalizes. Try it out by running the following on bash: 
+```bash
+python -m scripts.autonomous_drive --algo SAC --weights models/sac/version4/SAC_100000.pth --track s_curve
+```
 
 ## Roadmap
 
@@ -52,11 +63,14 @@ This section tracks the evolutionary progression of our Reinforcement Learning p
 
 | Model Checkpoint | Demonstration | Behavior & Characteristics |
 | :--- | :--- | :--- |
-| **`a2c_policy.pth`**<br>*(A2C Baseline)* | <img src="docs/media/a2c_policy_baseline.gif" width="220" /> | **Wall-Hugging Behavior:** Navigates track without hard collisions but settles into a sub-optimal equilibrium hugging outer track boundaries rather than maintaining lane center ($d \approx 0$). |
-| **`a2c_policy_redesign_1.pth`**<br>*(A2C Redesign 1)* | <img src="docs/media/a2c_policy_redesign_1.gif" width="220" /> | **Tight Lane Centering & Steering Jerk:** Introduced Gaussian centering ($\exp(-(d/\sigma)^2)$). Achieves tight centerline tracking ($d \approx 0$), but exhibits high-frequency steering chatter due to un-penalized action rates in A2C. |
-| **`PPO_policy_exploites...pth`**<br>*(PPO Attempt 1)* | <img src="docs/media/ppo_policy_rotation_exploit.gif" width="220" /> | **Rotation Exploit:** Contained an additive `+ 0.5 * centering_factor` reward term independent of speed. Discovered a reward-farming exploit spinning continuously in place near $d \approx 0$ to collect positive returns without driving forward. |
-| **`PPO_policy_update_reward.pth`**<br>*(PPO Attempt 2)* | <img src="docs/media/ppo_policy_update_reward.gif" width="220" /> | **Centerline Lock & Smoothness Gain:** Removed the additive `+ 0.5 * centering_factor` term, forcing `centering_factor` to act strictly multiplicatively with forward velocity progress. Completely eliminated rotation exploits with major smoothness gains over A2C. |
-| **`PPO_policy_update_reward_1.pth`**<br>*(PPO Attempt 3)* | <img src="docs/media/ppo_policy_update_reward_1.gif" width="220" /> | **Warm-Started Lap Completion:** Built directly on top of Attempt 2 by initializing from its partially trained weights and continuing optimization. Delivers smooth, highly polished lap navigation. |
+| **`a2c_policy.pth`**<br>*(A2C Baseline)* | <img src="docs/media/a2c/a2c_policy_baseline.gif" width="220" /> | **Wall-Hugging Behavior:** Navigates track without hard collisions but settles into a sub-optimal equilibrium hugging outer track boundaries rather than maintaining lane center ($d \approx 0$). |
+| **`a2c_policy_redesign_1.pth`**<br>*(A2C Redesign 1)* | <img src="docs/media/a2c/a2c_policy_redesign_1.gif" width="220" /> | **Tight Lane Centering & Steering Jerk:** Introduced Gaussian centering ($\exp(-(d/\sigma)^2)$). Achieves tight centerline tracking ($d \approx 0$), but exhibits high-frequency steering chatter due to un-penalized action rates in A2C. |
+| **`PPO_policy_exploites...pth`**<br>*(PPO Attempt 1)* | <img src="docs/media/ppo/ppo_policy_rotation_exploit.gif" width="220" /> | **Rotation Exploit:** Contained an additive `+ 0.5 * centering_factor` reward term independent of speed. Discovered a reward-farming exploit spinning continuously in place near $d \approx 0$ to collect positive returns without driving forward. |
+| **`PPO_policy_update_reward.pth`**<br>*(PPO Attempt 2)* | <img src="docs/media/ppo/ppo_policy_update_reward.gif" width="220" /> | **Centerline Lock & Smoothness Gain:** Removed the additive `+ 0.5 * centering_factor` term, forcing `centering_factor` to act strictly multiplicatively with forward velocity progress. Completely eliminated rotation exploits with major smoothness gains over A2C. |
+| **`PPO_policy_update_reward_1.pth`**<br>*(PPO Attempt 3)* | <img src="docs/media/ppo/ppo_policy_update_reward_1.gif" width="220" /> | **Warm-Started Lap Completion:** Built directly on top of Attempt 2 by initializing from its partially trained weights and continuing optimization. Delivers smooth, highly polished lap navigation. |
+| **`models/sac/version2/SAC_100000.pth`**<br>*(SAC Version 2)* | <img src="docs/media/sac/v2/SAC_100000.gif" width="220" /> | **Anti-Collision / Reversing Policy:** Enabled critic gradient flow to actor. Avoids collisions by halting or reversing near walls, but struggles with forward navigation due to target network lag ($p=0.95$ every 500 steps) and unconstrained `log_std`. |
+| **`models/sac/version3/SAC_100000.pth`**<br>*(SAC Version 3)* | <img src="docs/media/sac/v3/SAC_100000.gif" width="220" /> | **Crawling & Tensor Distortion:** Fixed step update frequency and variance heads, but a global batch reduction bug in the log-prob Jacobian distorted Bellman targets, causing slow crawling behavior. |
+| **`models/sac/version4/SAC_100000.pth`**<br>*(SAC Version 4)* | <img src="docs/media/sac/v4/SAC_100000.gif" width="220" /> | **High-Speed Off-Policy Optimization:** Fully corrected multivariate log-prob reduction, clamped `log_std \in [-20, 2]`, and continuous Polyak soft updates ($\tau=0.005$ every step). Navigates at high speeds ($\approx 5.0\text{ m/s}$) with tight centerline tracking ($d \approx 0$) and stable twin critics. |
 
 For detailed analysis, reward engineering observations, and training stability dynamics, see [models/README.md](models/README.md).
 
@@ -70,6 +84,9 @@ RC-car/
 │   ├── architecture.md         # Dataflow architecture and telemetry specifications
 │   └── media/                  # Animated policy simulation GIFs
 ├── models/                     # Trained RL policy checkpoints (.pth) and progression log
+│   ├── a2c/                    # A2C baseline and redesign weight checkpoints
+│   ├── ppo/                    # PPO attempt weight checkpoints
+│   ├── sac/                    # SAC versioned weight checkpoints (v1-v4)
 │   └── README.md               # Empirical model progression log and comparison matrix
 ├── scripts/                    # User-facing CLI entry points
 │   ├── autonomous_drive.py     # Main autonomous policy and vision navigation runner
@@ -108,8 +125,10 @@ RC-car/
 │   │   │   ├── sac_agent.py    # Soft Actor-Critic (SAC) agent
 │   │   │   └── random_agent.py # Random baseline agent
 │   │   ├── networks/           # PyTorch neural network policy architectures
-│   │   │   ├── actor.py        # Gaussian actor policy network
-│   │   │   ├── critic.py       # Value function critic network
+│   │   │   ├── actor.py        # Gaussian actor policy network (PPO/A2C)
+│   │   │   ├── critic.py       # Value function critic network (PPO/A2C)
+│   │   │   ├── sac_actor.py    # Squashed Gaussian actor network (SAC)
+│   │   │   ├── sac_critic.py   # State-action value twin Q-network (SAC)
 │   │   │   └── networks.py     # Shared MLP backbone architectures
 │   │   ├── base_agent.py       # Abstract BaseAgent policy contract
 │   │   ├── env.py              # Gymnasium environment wrapping car physics and sensors

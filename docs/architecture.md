@@ -86,6 +86,8 @@ When running autonomous driving policy inference:
 
 ## 3. Reinforcement Learning Training Pipeline (`train_rl.py`)
 
+### 3.1 On-Policy PPO Pipeline (`PPOAgent`)
+
 During PPO policy training:
 
 ```text
@@ -109,4 +111,35 @@ During PPO policy training:
    $$\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t), \quad A_t = \sum_{l=0}^{\infty} (\gamma \lambda)^l \delta_{t+l}$$
 3. **Mini-Batch PPO SGD Update**: `PPOAgent._ppo_update()` samples mini-batches over $K=10$ epochs, evaluating clipped surrogate policy loss:
    $$L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left(r_t(\theta)\hat{A}_t, \, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right) \right]$$
-4. **Checkpoint Preservation**: Models are serialized to PyTorch weight checkpoints (`models/*.pth`) for offline inference and deployment.
+4. **Checkpoint Preservation**: Models are serialized to PyTorch weight checkpoints (`models/ppo/*.pth`).
+
+---
+
+### 3.2 Off-Policy Soft Actor-Critic Pipeline (`SACAgent`)
+
+During SAC policy training:
+
+```text
++-----------------------+     Step Action     +-----------------------+
+|  SACActor (Policy)    | ------------------> |       RCCarEnv        |
+|  a = tanh(u)          |                     |  (Kinematics & Track) |
++-----------------------+                     +-----------------------+
+            ^                                             |
+            | Reparameterized Backprop                    | Stores (s, a, r, s', term)
+            | \nabla_\theta a_\theta(s)                   v
++-----------------------+                     +-----------------------+
+| Twin Critics (Q1, Q2) | <------------------ |     ReplayBuffer      |
+| & Soft Targets        |   Sample Mini-Batch |  (Circular Ring, 50k) |
++-----------------------+   (B = 64)          +-----------------------+
+```
+
+1. **Warmup Exploration & Collection**: For the first 5,000 steps (`start_step`), actions are drawn uniformly from `env.action_space.sample()`. Transitions $(s, a, r, s', \text{terminated})$ are saved to `ReplayBuffer`.
+2. **Sample Mini-Batch**: A random batch ($B=64$) is sampled at every step.
+3. **Soft Bellman Critic Update**: Evaluates minimum target Q with entropy correction:
+   $$y = r + \gamma (1 - d) \left( \min(Q_1^{\text{targ}}(s', a'), Q_2^{\text{targ}}(s', a')) - \alpha \log \pi(a'|s') \right)$$
+   Minimizes $\mathcal{L}_Q = \mathbb{E}[(Q_1(s, a) - y)^2] + \mathbb{E}[(Q_2(s, a) - y)^2]$.
+4. **Actor Policy Update**: Maximizes expected Q-value with entropy regularizer via reparameterization trick:
+   $$\mathcal{L}_\pi = -\mathbb{E}_{s \sim \mathcal{D}, a \sim \pi} \left[ \min(Q_1(s, a), Q_2(s, a)) - \alpha \log \pi(a|s) \right]$$
+5. **Polyak Target Tracking**: Continuously updates target critic parameters at every step:
+   $$\theta_{\text{target}} \leftarrow 0.995 \cdot \theta_{\text{target}} + 0.005 \cdot \theta_{\text{current}}$$
+6. **Checkpoint Preservation**: Intermediate and final models are saved to `models/sac/version4/*.pth`.
