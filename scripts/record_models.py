@@ -105,15 +105,30 @@ def parse_args():
     parser.add_argument("--steps", type=int, default=260, help="Simulation steps to record")
     return parser.parse_args()
 
+def resolve_default_gif_path(weights_path: str, algo: str, track_name: str = "default_oval") -> str:
+    """Mirror the models/<algo>/... path structure into docs/media/<algo>/... in lowercase."""
+    norm_weights = os.path.normpath(weights_path)
+    parts = norm_weights.split(os.sep)
+    stem = os.path.splitext(os.path.basename(norm_weights))[0].lower()
+    if track_name != "default_oval" and not stem.endswith(f"_{track_name}"):
+        stem = f"{stem}_{track_name}"
+
+    if "models" in parts:
+        models_idx = parts.index("models")
+        rel_dir_parts = [p.lower() for p in parts[models_idx + 1 : -1]]
+        return os.path.join("docs", "media", *rel_dir_parts, f"{stem}.gif")
+
+    return os.path.join("docs", "media", algo.lower(), f"{stem}.gif")
+
 def record_ppo_attempts():
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    models_dir = os.path.join(repo_root, "models")
-    media_dir = os.path.join(repo_root, "docs", "media")
+    models_dir = os.path.join(repo_root, "models", "ppo")
+    media_dir = os.path.join(repo_root, "docs", "media", "ppo")
 
     ppo_models = [
-        ("PPO", os.path.join(models_dir, "PPO_policy_exploites_small_d_by_rotating.pth"), os.path.join(media_dir, "ppo_policy_rotation_exploit.gif"), "PPO Attempt 1 (Rotation Exploit)"),
-        ("PPO", os.path.join(models_dir, "PPO_policy_update_reward.pth"), os.path.join(media_dir, "ppo_policy_update_reward.gif"), "PPO Attempt 2 (Centerline Lock & Oscillations)"),
-        ("PPO", os.path.join(models_dir, "PPO_policy_update_reward_1.pth"), os.path.join(media_dir, "ppo_policy_update_reward_1.gif"), "PPO Attempt 3 (Smooth Lap Completion)"),
+        ("PPO", os.path.join(models_dir, "ppo_v1.pth"), os.path.join(media_dir, "ppo_v1.gif"), "PPO v1 (Rotation Exploit)"),
+        ("PPO", os.path.join(models_dir, "ppo_v2.pth"), os.path.join(media_dir, "ppo_v2.gif"), "PPO v2 (Centerline Lock & Multiplicative Centering)"),
+        ("PPO", os.path.join(models_dir, "ppo_v3.pth"), os.path.join(media_dir, "ppo_v3.gif"), "PPO v3 (Warm-Start Lap Completion)"),
     ]
 
     for algo, weights, gif_path, title in ppo_models:
@@ -125,9 +140,8 @@ def record_ppo_attempts():
 def main():
     args = parse_args()
     if args.weights:
-        if args.output:
-            os.makedirs(os.path.dirname(args.output), exist_ok=True)
-        output_path = args.output or f"docs/media/{os.path.splitext(os.path.basename(args.weights))[0]}.gif"
+        output_path = args.output or resolve_default_gif_path(args.weights, args.algo, args.track)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         title = args.title or f"{args.algo} Simulation ({os.path.basename(args.weights)})"
         record_policy(args.algo, args.weights, output_path, title=title, track_name=args.track, num_steps=args.steps)
     else:

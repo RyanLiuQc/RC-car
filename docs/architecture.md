@@ -142,4 +142,4 @@ During SAC policy training:
    $$\mathcal{L}_\pi = -\mathbb{E}_{s \sim \mathcal{D}, a \sim \pi} \left[ \min(Q_1(s, a), Q_2(s, a)) - \alpha \log \pi(a|s) \right]$$
 5. **Polyak Target Tracking**: Continuously updates target critic parameters at every step:
    $$\theta_{\text{target}} \leftarrow 0.995 \cdot \theta_{\text{target}} + 0.005 \cdot \theta_{\text{current}}$$
-6. **Checkpoint Preservation**: Intermediate and final models are saved to `models/sac/version4/*.pth`.
+6. **Checkpoint Preservation**: Intermediate and final models are saved to `models/sac/v4/sac_*.pth`.

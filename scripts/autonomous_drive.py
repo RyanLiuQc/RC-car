@@ -20,6 +20,13 @@ from src.environment.track import Track
 from src.tools.visualizer import TrackVisualizer
 from src.rl.agents import RandomAgent, A2CAgent, PPOAgent, SACAgent
 
+DEFAULT_WEIGHTS = {
+    "A2C": "models/a2c/a2c_v2.pth",
+    "PPO": "models/ppo/ppo_v3.pth",
+    "SAC": "models/sac/v4/sac_100000.pth",
+    "RANDOM": "",
+}
+
 def parse_args():
     """Parse command-line arguments for autonomous driving visualization."""
     parser = argparse.ArgumentParser(description="Autonomous RC Car RL Inference & Visualization Script")
@@ -33,8 +40,8 @@ def parse_args():
     parser.add_argument(
         "--weights",
         type=str,
-        default="models/a2c_policy_new_reward.pth",
-        help="Path to trained model weights checkpoint (.pth)"
+        default=None,
+        help="Path to trained model weights checkpoint (.pth). Defaults to best checkpoint for selected --algo."
     )
     parser.add_argument(
         "--track",
@@ -54,10 +61,11 @@ def parse_args():
 def main() -> None:
     """Run autonomous control loop visualizing selected agent policy on track."""
     args = parse_args()
+    weights_path = args.weights if args.weights is not None else DEFAULT_WEIGHTS.get(args.algo, "")
 
     print(f"Initializing Autonomous Driving Simulation...")
     print(f"  - Algorithm: {args.algo}")
-    print(f"  - Weights Path: {args.weights if args.algo != 'RANDOM' else 'N/A (Random Policy)'}")
+    print(f"  - Weights Path: {weights_path if args.algo != 'RANDOM' else 'N/A (Random Policy)'}")
     print(f"  - Track Layout: {args.track}")
 
     # 1. Instantiate Track, Physics Car Backend, and Lidar Sensor Simulator
@@ -83,13 +91,10 @@ def main() -> None:
         weights_path = ""
     elif args.algo == "A2C":
         agent = A2CAgent(obs_dim=6, action_dim=2)
-        weights_path = args.weights
     elif args.algo == "PPO":
         agent = PPOAgent(obs_dim=6, action_dim=2)
-        weights_path = args.weights
     elif args.algo == "SAC":
         agent = SACAgent(obs_dim=6, action_dim=2)
-        weights_path = args.weights
     else:
         raise ValueError(f"Unknown algorithm: {args.algo}")
 

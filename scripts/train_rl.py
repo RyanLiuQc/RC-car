@@ -23,25 +23,32 @@ def parse_args():
         type=str, 
         default="PPO", 
         choices=["RANDOM", "PPO", "SAC", "A2C"],
-        help="Select RL training algorithm (default: RANDOM)"
+        help="Select RL training algorithm (default: PPO)"
     )
     parser.add_argument("--timesteps", type=int, default=100000, help="Total training timesteps")
     parser.add_argument("--visualize", action="store_true", help="Enable live 2D visual rendering")
-    #parser.add_argument("--path", type=str, help="Weight's path")
-    parser.add_argument("--folder", type=str, help="Weight's folder")
-    parser.add_argument("--filename", type=str, help="weight's folder name without .pth")
+    parser.add_argument("--version", type=str, help="Optional version subfolder (e.g. v1, v2, v4)")
+    parser.add_argument("--folder", type=str, help="Target directory for saving weights (default: models/<algo>[/<version>])")
+    parser.add_argument("--filename", type=str, help="Base checkpoint filename without .pth (default: lowercase <algo>)")
     parser.add_argument("--load-weights", type=str, help="Path to pre-trained model weights file to load before training")
 
     return parser.parse_args()
 
 def main():
-    # Train policy: model.learn(total_timesteps=10000) # args.timesteps?
-    # Save trained policy model weights: model.save("rc_car_ppo_policy")
-
     args = parse_args()
 
-    filename = args.filename or args.algo
-    folder = args.folder or (os.path.join("models", args.algo.lower()))
+    algo_lower = args.algo.lower()
+    filename = (args.filename or algo_lower).lower()
+
+    if args.folder:
+        folder = args.folder
+    elif args.version:
+        version_str = args.version.lower()
+        if not version_str.startswith("v"):
+            version_str = f"v{version_str}"
+        folder = os.path.join("models", algo_lower, version_str)
+    else:
+        folder = os.path.join("models", algo_lower)
 
     render_mode = "human" if args.visualize else None
     print(f"Initializing Training Pipeline with Algorithm: {args.algo} ({'Visualized' if args.visualize else 'Headless'} mode)")
@@ -49,16 +56,12 @@ def main():
     # 1. Instantiate Agent based on CLI argument
     if args.algo == "RANDOM":
         agent = RandomAgent(action_dim=2)
-        weights_path = "models/random_policy.pth"
     elif args.algo == "PPO":
         agent = PPOAgent(obs_dim=6, action_dim=2, device="cpu")
-        weights_path = "models/ppo_policy.pth"
     elif args.algo == "SAC":
         agent = SACAgent(obs_dim=6, action_dim=2)
-        weights_path = "models/sac/sac_policy.pth"
     elif args.algo == "A2C":
         agent = A2CAgent(obs_dim=6, action_dim=2, actor_lr=1e-4, critic_lr=3e-4)
-        weights_path = "models/a2c_policy_3.pth"
     else:
         raise ValueError(f"Unknown algorithm: {args.algo}")
 
@@ -138,13 +141,12 @@ def main():
 
         if step % 20000 == 0:
             os.makedirs(folder, exist_ok=True)
-            agent.save(os.path.join(folder, filename + f"_{step}.pth"))
+            agent.save(os.path.join(folder, f"{filename}_{step}.pth"))
 
-    # save weights
-    #agent.save(weights_path)
-    # agent.save(args.path or weights_path)
-    os.makedirs(folder, exist_ok=True)
-    agent.save(os.path.join(folder, filename + ".pth"))
+    # Save final checkpoint if total timesteps wasn't already saved at a 20k interval
+    if args.timesteps % 20000 != 0:
+        os.makedirs(folder, exist_ok=True)
+        agent.save(os.path.join(folder, f"{filename}_{args.timesteps}.pth"))
 
     
     

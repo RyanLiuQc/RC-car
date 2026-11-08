@@ -6,9 +6,9 @@ This directory contains trained Reinforcement Learning (RL) policy model weights
 
 ## 1. A2C Model Progression and Empirical Observations
 
-### 1.1 `a2c_policy.pth` — A2C Baseline Iteration (First Attempt)
+### 1.1 `a2c/a2c_v1.pth` — A2C v1 (Baseline Iteration)
 
-<img src="../docs/media/a2c/a2c_policy_baseline.gif" width="380" alt="A2C Baseline Policy - Wall Hugging" />
+<img src="../docs/media/a2c/a2c_v1.gif" width="380" alt="A2C v1 Baseline Policy - Wall Hugging" />
 
 * **Algorithm:** Advantage Actor-Critic (A2C, 1-Step TD)
 * **Reward Formulation:** Naive baseline speed incentive combined with linear lateral displacement penalties.
@@ -18,9 +18,9 @@ This directory contains trained Reinforcement Learning (RL) policy model weights
 
 ---
 
-### 1.2 `a2c_policy_redesign_1.pth` — A2C Reward Redesign (Iteration 1)
+### 1.2 `a2c/a2c_v2.pth` — A2C v2 (Reward Redesign)
 
-<img src="../docs/media/a2c/a2c_policy_redesign_1.gif" width="380" alt="A2C Redesign 1 - Tight Centering & Steering Jerk" />
+<img src="../docs/media/a2c/a2c_v2.gif" width="380" alt="A2C v2 Redesign - Tight Centering & Steering Jerk" />
 
 * **Algorithm:** Advantage Actor-Critic (A2C, 1-Step TD)
 * **Reward Formulation Changes:**
@@ -49,9 +49,9 @@ When transitioning to Proximal Policy Optimization (PPO, GAE-$\lambda$), several
 
 ---
 
-### 2.1 `PPO_policy_exploites_small_d_by_rotating.pth` — PPO Attempt 1 (Rotation Exploit)
+### 2.1 `ppo/ppo_v1.pth` — PPO v1 (Rotation Exploit)
 
-<img src="../docs/media/ppo/ppo_policy_rotation_exploit.gif" width="380" alt="PPO Rotation Exploit" />
+<img src="../docs/media/ppo/ppo_v1.gif" width="380" alt="PPO v1 Rotation Exploit" />
 
 * **Algorithm:** Proximal Policy Optimization (PPO, GAE-$\lambda$)
 * **Reward Formulation Defect:** Included a standalone additive centering term:
@@ -61,9 +61,9 @@ When transitioning to Proximal Policy Optimization (PPO, GAE-$\lambda$), several
 
 ---
 
-### 2.2 `PPO_policy_update_reward.pth` — PPO Attempt 2 (Centerline Lock & Multiplicative Centering)
+### 2.2 `ppo/ppo_v2.pth` — PPO v2 (Centerline Lock & Multiplicative Centering)
 
-<img src="../docs/media/ppo/ppo_policy_update_reward.gif" width="380" alt="PPO Update Reward" />
+<img src="../docs/media/ppo/ppo_v2.gif" width="380" alt="PPO v2 Update Reward" />
 
 * **Algorithm:** Proximal Policy Optimization (PPO, GAE-$\lambda$)
 * **Reward Formulation Changes:**
@@ -75,13 +75,13 @@ When transitioning to Proximal Policy Optimization (PPO, GAE-$\lambda$), several
 
 ---
 
-### 2.3 `PPO_policy_update_reward_1.pth` — PPO Attempt 3 (Warm-Started Checkpoint & Smooth Lap Completion)
+### 2.3 `ppo/ppo_v3.pth` — PPO v3 (Warm-Started Checkpoint & Smooth Lap Completion)
 
-<img src="../docs/media/ppo/ppo_policy_update_reward_1.gif" width="380" alt="PPO Update Reward 1" />
+<img src="../docs/media/ppo/ppo_v3.gif" width="380" alt="PPO v3 Warm-Start" />
 
 * **Algorithm:** Proximal Policy Optimization (PPO, GAE-$\lambda$)
 * **Training Methodology:**
-  * **Warm-Start Checkpoint Training:** Initialized from `PPO_policy_update_reward.pth` (Attempt 2) rather than random weight initialization, allowing the policy to retain learned spatial representations while extending optimization.
+  * **Warm-Start Checkpoint Training:** Initialized from `ppo/ppo_v2.pth` (v2) rather than random weight initialization, allowing the policy to retain learned spatial representations while extending optimization.
 * **Observed Driving Behavior:**
   * **Polished Lap Navigation:** Delivers exceptionally smooth, continuous lap navigation with optimal speed control, tight centerline tracking ($d \approx 0$), and zero control chatter.
 
@@ -105,7 +105,7 @@ Key architectural components include:
 
 ---
 
-### 3.1 `sac_policy_attempt_1.pth` — SAC Attempt 1 (Detached Actor Gradients)
+### 3.1 `sac/sac_v1.pth` — SAC v1 (Detached Actor Gradients)
 
 * **Algorithm:** Soft Actor-Critic (SAC)
 * **Implementation Defects:**
@@ -117,9 +117,9 @@ Key architectural components include:
 
 ---
 
-### 3.2 `version2/` — SAC Version 2 (Gradient tracking action in Q-value)
+### 3.2 `sac/v2/` — SAC v2 (Gradient Tracking Action in Q-Value)
 
-<img src="../docs/media/sac/v2/SAC_100000.gif" width="380" alt="SAC Version 2 - 100k Steps" />
+<img src="../docs/media/sac/v2/sac_100000.gif" width="380" alt="SAC v2 - 100k Steps" />
 
 * **Algorithm:** Soft Actor-Critic (SAC)
 * **Key Enhancements:**
@@ -134,9 +134,9 @@ Key architectural components include:
 
 ---
 
-### 3.3 `version3/` — SAC Version 3 (Target Updates & Log-Prob Broadcasting Bug)
+### 3.3 `sac/v3/` — SAC v3 (Target Updates & Log-Prob Broadcasting Bug)
 
-<img src="../docs/media/sac/v3/SAC_100000.gif" width="380" alt="SAC Version 3 - 100k Steps" />
+<img src="../docs/media/sac/v3/sac_100000.gif" width="380" alt="SAC v3 - 100k Steps" />
 
 * **Algorithm:** Soft Actor-Critic (SAC)
 * **Key Enhancements:**
@@ -148,9 +148,9 @@ Key architectural components include:
 
 ---
 
-### 3.4 `version4/` — SAC Version 4 (Full Convergence & High-Speed Lap Optimization)
+### 3.4 `sac/v4/` — SAC v4 (Full Convergence & High-Speed Lap Optimization)
 
-<img src="../docs/media/sac/v4/SAC_100000.gif" width="380" alt="SAC Version 4 - 100k Steps" />
+<img src="../docs/media/sac/v4/sac_100000.gif" width="380" alt="SAC v4 - 100k Steps" />
 
 * **Algorithm:** Soft Actor-Critic (SAC)
 * **Key Fixes & Enhancements:**
@@ -168,25 +168,25 @@ Key architectural components include:
 
 | Model Checkpoint | Algorithm | Primary Feature | Centering ($d \approx 0$) | Speed & Smoothness | Training Stability |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`a2c_policy.pth`** | A2C (1-Step) | Linear speed & boundary penalty | Wall Hugging | Low Speed / Oscillations | Inconsistent |
-| **`a2c_policy_redesign_1.pth`** | A2C (1-Step) | Gaussian centering & progress coupling | Excellent ($d \approx 0$) | Moderate / Steering Jerk | Inconsistent / High Variance |
-| **`PPO_policy_exploites...pth`** | PPO (GAE) | Additive centering reward (`+ 0.5 * centering`) | Rotation Exploit | N/A (Spins in place) | High (Converges on exploit) |
-| **`PPO_policy_update_reward.pth`** | PPO (GAE) | Multiplicative centering (removed additive term) | Excellent ($d \approx 0$) | High / Smooth | High |
-| **`PPO_policy_update_reward_1.pth`** | PPO (GAE) | Warm-started from Attempt 2 | Excellent ($d \approx 0$) | Optimal / Polished | High / Repeatable |
-| **`sac/version2/SAC_100000.pth`** | SAC (Off-Policy) | Restored actor gradients, target lag ($p=0.95$ / 500 steps) | Poor (Avoids walls) | Stationary / Reversing | Inconsistent |
-| **`sac/version3/SAC_100000.pth`** | SAC (Off-Policy) | Batch sum bug in log-prob Jacobian | Moderate | Crawling / Slow Progress | Distorted Target Loss |
-| **`sac/version4/SAC_100000.pth`** | SAC (Off-Policy) | Max-entropy actor-critic, twin Q-nets, continuous soft updates | Excellent ($d \approx 0$) | High-Speed ($\approx 5.0\text{ m/s}$) & Agile | High / Robust ($|Q_1 - Q_2| \le 0.5$) |
+| **`a2c/a2c_v1.pth`** | A2C (1-Step) | Linear speed & boundary penalty | Wall Hugging | Low Speed / Oscillations | Inconsistent |
+| **`a2c/a2c_v2.pth`** | A2C (1-Step) | Gaussian centering & progress coupling | Excellent ($d \approx 0$) | Moderate / Steering Jerk | Inconsistent / High Variance |
+| **`ppo/ppo_v1.pth`** | PPO (GAE) | Additive centering reward (`+ 0.5 * centering`) | Rotation Exploit | N/A (Spins in place) | High (Converges on exploit) |
+| **`ppo/ppo_v2.pth`** | PPO (GAE) | Multiplicative centering (removed additive term) | Excellent ($d \approx 0$) | High / Smooth | High |
+| **`ppo/ppo_v3.pth`** | PPO (GAE) | Warm-started from v2 | Excellent ($d \approx 0$) | Optimal / Polished | High / Repeatable |
+| **`sac/v2/sac_100000.pth`** | SAC (Off-Policy) | Restored actor gradients, target lag ($p=0.95$ / 500 steps) | Poor (Avoids walls) | Stationary / Reversing | Inconsistent |
+| **`sac/v3/sac_100000.pth`** | SAC (Off-Policy) | Batch sum bug in log-prob Jacobian | Moderate | Crawling / Slow Progress | Distorted Target Loss |
+| **`sac/v4/sac_100000.pth`** | SAC (Off-Policy) | Max-entropy actor-critic, twin Q-nets, continuous soft updates | Excellent ($d \approx 0$) | High-Speed ($\approx 5.0\text{ m/s}$) & Agile | High / Robust ($|Q_1 - Q_2| \le 0.5$) |
 
 ---
 
-## 5. Multi-Track Zero-Shot Generalization (PPO Attempt 3)
+## 5. Multi-Track Zero-Shot Generalization (PPO v3)
 
-To evaluate whether policy representations learned on `default_oval` transfer to unseen track geometries without additional training, `PPO_policy_update_reward_1.pth` (Attempt 3) was evaluated zero-shot on the `s_curve` track layout.
+To evaluate whether policy representations learned on `default_oval` transfer to unseen track geometries without additional training, `ppo/ppo_v3.pth` (v3) was evaluated zero-shot on the `s_curve` track layout.
 
 | Track Layout | Simulation Demonstration | Zero-Shot Transfer Analysis |
 | :--- | :--- | :--- |
-| **`default_oval`** | <img src="../docs/media/ppo/ppo_policy_update_reward_1.gif" width="220" /> | **Primary Training Track:** Achieves continuous lap completion with tight centerline tracking ($d \approx 0$) and optimal speed control. |
-| **`s_curve`** | <img src="../docs/media/ppo/ppo_policy_update_reward_1_s_curve.gif" width="220" /> | **Zero-Shot Transfer (Chicane):** Successfully navigates reverse curves and continuous chicanes, maintaining smooth steering adjustments without off-track collisions. |
+| **`default_oval`** | <img src="../docs/media/ppo/ppo_v3.gif" width="220" /> | **Primary Training Track:** Achieves continuous lap completion with tight centerline tracking ($d \approx 0$) and optimal speed control. |
+| **`s_curve`** | <img src="../docs/media/ppo/ppo_v3_s_curve.gif" width="220" /> | **Zero-Shot Transfer (Chicane):** Successfully navigates reverse curves and continuous chicanes, maintaining smooth steering adjustments without off-track collisions. |
 
 ---
 

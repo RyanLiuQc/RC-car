@@ -6,12 +6,12 @@
 #
 # Example usage:
 #     python -m scripts.record_multi_agent \
-#         --weights models/sac/sac_policy_attempt_1.pth \
-#                   models/sac/version2/SAC.pth \
-#                   models/sac/version3/SAC.pth \
-#                   models/sac/version4/SAC.pth \
+#         --weights models/sac/sac_v1.pth \
+#                   models/sac/v2/sac_100000.pth \
+#                   models/sac/v3/sac_100000.pth \
+#                   models/sac/v4/sac_100000.pth \
 #         --labels "SAC v1 (Detached Q)" "SAC v2 (Target Lag)" "SAC v3 (Batch Sum Bug)" "SAC v4 (Optimized)" \
-#         --output docs/media/sac/sac_progression_comparison.gif \
+#         --output docs/media/sac/sac_progression_v4.gif \
 #         --title "SAC Policy Evolutionary Progression (v1 - v4)"
 # """
 
